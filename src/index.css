@@ -11,16 +11,16 @@
   --font-display: "Pompei", "Polin", system-ui, sans-serif;
 
   /* Palette from the logo: plum night, pomegranate wine, gold leaf, paper cream */
-  --color-night: #1a0b17;
-  --color-plum: #3b1534;
-  --color-wine: #6b1d3a;
+  --color-night: #2a0618;
+  --color-plum: #4f0d2e;
+  --color-wine: #7d1846;
   --color-gold: #d6b26e;
   --color-gold-deep: #8a6a2f;
   --color-cream: #f4ede3;
   --color-sand: #ebe1d2;
   --color-ink: #2a1424;
   --color-ink-soft: #5e4a57;
-  --color-mist: #d9cbd3;
+  --color-mist: #e8d2dc;
 
   /* Five text sizes only */
   --text-hero: clamp(2.9rem, 9vw, 7.25rem);
@@ -37,7 +37,7 @@
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-:root { --page-bg: #1a0b17; color-scheme: dark; }
+:root { --page-bg: #4a0b2c; color-scheme: dark; }
 
 html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; overflow-x: clip; }
 
@@ -81,6 +81,31 @@ body {
   padding-bottom: 0.06em;
 }
 .stroke.is-on { background-size: 100% 2px; }
+
+/* Pomegranate skin: the real texture from Shlomi's logo photo, showing up in patches like light on a fruit */
+.pom-skin { position: relative; }
+.pom-skin::before,
+.pom-skin::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: -1; }
+.pom-skin::before {
+  background: url("/img/pom-skin.webp") repeat;
+  background-size: 520px auto;
+  mix-blend-mode: overlay;
+  opacity: 0.7;
+  -webkit-mask-image: var(--skin-mask);
+  mask-image: var(--skin-mask);
+}
+.pom-skin::after {
+  background:
+    radial-gradient(ellipse 55% 40% at 82% 18%, rgb(214 60 130 / 0.22), transparent 70%),
+    radial-gradient(ellipse 50% 45% at 10% 85%, rgb(10 0 6 / 0.45), transparent 70%);
+}
+.pom-skin {
+  --skin-mask:
+    linear-gradient(rgb(0 0 0 / 0.3), rgb(0 0 0 / 0.3)),
+    radial-gradient(ellipse 38% 30% at 18% 22%, #000 25%, transparent 70%),
+    radial-gradient(ellipse 30% 26% at 88% 70%, #000 20%, transparent 70%),
+    radial-gradient(ellipse 26% 20% at 55% 95%, #000 15%, transparent 70%);
+}
 
 /* Paper grain for cream sections */
 .paper {

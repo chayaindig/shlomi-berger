@@ -15,7 +15,7 @@ export function Hero() {
   const ring = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : 90]);
 
   return (
-    <section ref={ref} id="top" data-bg="#1a0b17" className="relative overflow-x-clip pt-24 md:pt-28">
+    <section ref={ref} id="top" data-bg="#4a0b2c" className="pom-skin relative overflow-x-clip pt-24 md:pt-28">
       <div className="mx-auto grid max-w-7xl items-center gap-6 px-5 pb-12 md:px-8 lg:grid-cols-[1.05fr_1fr] lg:gap-10 lg:pb-24">
         <div className="relative z-10">
           <Reveal>
@@ -87,7 +87,7 @@ export function Ticker() {
 /* ───────────── Statement + real works ───────────── */
 export function Works() {
   return (
-    <section id="works" data-bg="#1a0b17" className="px-5 py-20 md:px-8 md:py-32">
+    <section id="works" data-bg="#3e0925" className="pom-skin px-5 py-20 md:px-8 md:py-32">
       <div className="mx-auto max-w-6xl">
         <Eyebrow n="01">העבודות של שלומי</Eyebrow>
         <ScrollWords
@@ -277,7 +277,7 @@ export function HowToOrder() {
   const activeStep = stage < 2 ? 0 : stage < 4 ? 1 : 2;
 
   return (
-    <section ref={ref} id="how" data-bg="#24101f" className="relative h-[260vh] scroll-mt-0">
+    <section ref={ref} id="how" data-bg="#33071f" className="pom-skin relative h-[260vh] scroll-mt-0">
       <div className="sticky top-0 flex min-h-svh items-center px-5 pb-6 pt-20 md:px-8 md:py-20">
         <div className="mx-auto grid w-full max-w-6xl items-center gap-8 lg:grid-cols-[1fr_auto] lg:gap-20">
           <div>
@@ -358,7 +358,7 @@ export function Events() {
   const field = 'w-full rounded-2xl border border-cream/15 bg-night/50 px-4 py-3 text-cream placeholder:text-mist/60 focus:border-gold focus:outline-none';
 
   return (
-    <section id="events" data-bg="#3b1534" className="scroll-mt-16 px-5 py-20 md:px-8 md:py-32">
+    <section id="events" data-bg="#5a1036" className="pom-skin scroll-mt-16 px-5 py-20 md:px-8 md:py-32">
       <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2 lg:gap-20">
         <div>
           <Eyebrow n="04">אירועים וחברות</Eyebrow>
@@ -511,8 +511,8 @@ export function Faq() {
 /* ───────────── Final CTA + footer ───────────── */
 export function Footer({ cart }: { cart: CartApi }) {
   return (
-    <footer data-bg="#1a0b17" className="relative overflow-hidden px-5 pb-28 pt-24 md:px-8 md:pb-16">
-      <div aria-hidden className="absolute inset-x-0 top-0 h-[32rem] bg-[radial-gradient(ellipse_at_50%_0%,rgb(107_29_58/0.55),transparent_65%)]" />
+    <footer data-bg="#2e061b" className="pom-skin relative overflow-hidden px-5 pb-28 pt-24 md:px-8 md:pb-16">
+      <div aria-hidden className="absolute inset-x-0 top-0 h-[32rem] bg-[radial-gradient(ellipse_at_50%_0%,rgb(125_24_70/0.55),transparent_65%)]" />
       <div className="relative mx-auto max-w-6xl text-center">
         <h2 className="mx-auto max-w-3xl text-section text-cream">מישהו מחכה למגש <span className="gold-text">שלא ישכח.</span></h2>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
