@@ -7,7 +7,7 @@ import { img } from './data';
 // cycles through all of them, and the ring around it changes order every time.
 const pool = [
   { id: 'watermelon', name: 'אבטיח', src: 'hero/watermelon.webp' },
-  { id: 'pineapple', name: 'אננס', src: 'hero/pineapple.webp' },
+  { id: 'pineapple', name: 'אננס', src: 'hero/pineapple-half.webp' },
   { id: 'grapes', name: 'ענבים', src: 'hero/grapes.webp' },
   { id: 'strawberries', name: 'תותים', src: 'hero/strawberries.webp' },
   { id: 'passion', name: 'פסיפלורה', src: 'hero/passion.webp' },
