@@ -5,7 +5,7 @@ import { watchOrphans } from './noOrphans';
 import { watchPageColor } from './pageColor';
 import { About, Catalog, Events, Faq, Footer, FruitStory, Hero, HowToOrder, Testimonials, Ticker, Works } from './Sections';
 import { Icon } from './ui';
-import { AppleBlessing, Carving, PlatterRing } from './Craft';
+import { AppleBlessing, Carving, PlatterWall } from './Craft';
 import { CursorTrail } from './CursorTrail';
 
 const allItems = [...products.map(p => ({ id: p.id, name: p.name, detail: p.size, price: p.price as number | null, from: p.from, tray: true })),
@@ -45,7 +45,7 @@ export default function App() {
         <Works />
         <Carving cart={api} />
         <AppleBlessing cart={api} text={appleText} setText={setAppleText} />
-        <PlatterRing cart={api} />
+        <PlatterWall cart={api} />
         <Catalog cart={api} />
         <HowToOrder />
         <Events />

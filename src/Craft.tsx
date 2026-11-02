@@ -1,7 +1,23 @@
 import { animate, motion, useInView, useReducedMotion } from 'motion/react';
-import { useEffect, useRef, useState } from 'react';
-import RotatingCards from './components/RotatingCards';
-import { img, money, products } from './data';
+import { lazy, Suspense, useEffect, useRef, useState, type RefObject } from 'react';
+import { img, money, products, works } from './data';
+
+// three.js effects (React Bits Pro) load only after the page has loaded and the section is near,
+// with a static image until then, so phones never pay for them up front.
+const ShaderReveal = lazy(() => import('./components/ShaderReveal'));
+const ConcaveCarousel = lazy(() => import('./components/ConcaveCarousel'));
+
+function useReadyNear(ref: RefObject<Element | null>) {
+  const near = useInView(ref, { once: true, margin: '300px 0px' });
+  const [loaded, setLoaded] = useState(() => document.readyState === 'complete');
+  useEffect(() => {
+    if (loaded) return;
+    const on = () => setLoaded(true);
+    window.addEventListener('load', on);
+    return () => window.removeEventListener('load', on);
+  }, [loaded]);
+  return near && loaded;
+}
 import { Button, Eyebrow, Reveal, Stroke } from './ui';
 
 type CartApi = { qty: (id: string) => number; add: (id: string) => void; openCart: () => void };
@@ -60,7 +76,34 @@ function CarveSlider() {
   );
 }
 
+/* Shader Reveal (Pro): a liquid trail under the cursor or finger wipes the rind away and shows the roses */
+function CarveReveal() {
+  const ref = useRef<HTMLDivElement>(null);
+  const ready = useReadyNear(ref);
+  const before = img('carve-roses-before.webp');
+  const fallback = <img src={before} alt="" className="absolute inset-0 size-full object-cover" />;
+  return (
+    <div ref={ref} className="relative aspect-square w-full overflow-hidden rounded-[2rem] bg-plum">
+      <span className="sr-only">אבטיח שלם, ומתחתיו אותו אבטיח מגולף לזר של ורדים (הדמיה)</span>
+      {ready ? (
+        <Suspense fallback={fallback}>
+          <ShaderReveal
+            frontImage={before}
+            backImage={img('carve-roses.webp')}
+            className="absolute inset-0"
+            cursorSize={300}
+            revealStrength={1}
+            autoIntensity={1.8}
+          />
+        </Suspense>
+      ) : fallback}
+      <span className="pointer-events-none absolute right-4 top-4 rounded-full bg-gold px-3 py-1 text-note font-medium text-night">העבירו עליו את העכבר</span>
+    </div>
+  );
+}
+
 export function Carving({ cart }: { cart: CartApi }) {
+  const reduce = useReducedMotion();
   return (
     <section id="carving" data-bg="#33071f" data-trail="watermelon" className="pom-skin px-5 py-20 md:px-8 md:py-32">
       <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-20">
@@ -84,8 +127,10 @@ export function Carving({ cart }: { cart: CartApi }) {
           </div>
         </div>
         <Reveal>
-          <CarveSlider />
-          <p className="mt-3 text-center text-note text-mist">גררו את הקו וראו את האבטיח לפני ואחרי</p>
+          {reduce ? <CarveSlider /> : <CarveReveal />}
+          <p className="mt-3 text-center text-note text-mist">
+            {reduce ? 'גררו את הקו וראו את האבטיח לפני ואחרי' : 'העבירו את העכבר על האבטיח (או את האצבע בטלפון) וחשפו את הוורדים שמתחת לקליפה'}
+          </p>
         </Reveal>
       </div>
     </section>
@@ -147,55 +192,48 @@ export function AppleBlessing({ cart, text, setText }: { cart: CartApi; text: st
   );
 }
 
-/* ───────────── Platter ring (React Bits Pro: Rotating Cards) ───────────── */
-function useRingSize() {
-  const get = () => {
-    const w = typeof window === 'undefined' ? 1200 : window.innerWidth;
-    if (w < 640) return { radius: Math.max(230, w * 0.78), card: 120 };
-    if (w < 1024) return { radius: 380, card: 160 };
-    return { radius: 560, card: 200 };
-  };
-  const [s, setS] = useState(get);
-  useEffect(() => { const on = () => setS(get()); window.addEventListener('resize', on); return () => window.removeEventListener('resize', on); }, []);
-  return s;
-}
-
-export function PlatterRing({ cart }: { cart: CartApi }) {
-  const { radius, card } = useRingSize();
+/* ───────────── Shlomi's platters on a curved wall (React Bits Pro: Concave Carousel) ───────────── */
+export function PlatterWall({ cart }: { cart: CartApi }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const ready = useReadyNear(ref);
   const reduce = useReducedMotion();
-  const picks = products.filter((_, i) => i % 2 === 0 || i > 17).slice(0, 14);
-  const cards = picks.map(p => ({
-    id: p.id,
-    image: img(`catalog/${p.id}.webp`),
-    background: `url(${img(`catalog/${p.id}.webp`)}) center/cover`,
-    content: (
-      <span className="absolute inset-x-0 bottom-3 mx-auto w-max rounded-full bg-night/85 px-2.5 py-1 text-[0.7rem] font-medium text-cream md:text-note">
-        {p.name} · {money(p.price)}
-      </span>
-    ),
-  }));
-  const box = radius * 2 + card;
+  const trays = products.filter((_, i) => i % 2 === 0 || i > 17).slice(0, 10);
+  const items = [
+    ...works.map(w => ({ src: w.src, alt: w.title, title: w.title, subtitle: 'עבודה של שלומי' })),
+    ...trays.map(p => ({ src: img(`catalog/${p.id}.webp`), alt: `מגש ${p.name} ${p.size}`, title: p.name, subtitle: `${p.size} · ${money(p.price)}` })),
+  ];
+  const ids = [...works.map(() => ''), ...trays.map(p => p.id)];
 
   return (
-    <section id="ring" data-bg="#3e0925" data-trail="mix" className="pom-skin relative overflow-hidden pt-20 md:pt-28" style={{ height: `calc(${radius + card / 2}px + 18rem)` }}>
+    <section id="wall" data-bg="#3e0925" data-trail="mix" className="pom-skin relative overflow-x-clip pb-10 pt-20 md:pt-28">
       <div className="relative z-10 mx-auto max-w-3xl px-5 text-center">
-        <Eyebrow n="05">סיבוב על המגשים</Eyebrow>
-        <h2 className="mt-4 text-section text-cream">מגש מסתובב, <span className="gold-text">כמו על השולחן.</span></h2>
-        <p className="mx-auto mt-3 max-w-md text-mist">סובבו באצבע, ולחצו על מגש כדי להוסיף אותו להזמנה.</p>
+        <Eyebrow n="05">המגשים של שלומי</Eyebrow>
+        <h2 className="mt-4 text-section text-cream">קיר שלם <span className="gold-text">של מגשים.</span></h2>
+        <p className="mx-auto mt-3 max-w-md text-mist">גררו הצידה כדי לעבור בין המגשים. לחיצה על מגש מהקטלוג מוסיפה אותו להזמנה.</p>
       </div>
-      <div className="absolute left-1/2 -translate-x-1/2" style={{ top: `calc(18rem + ${card / 2}px)`, width: box, height: box }}>
-        <RotatingCards
-          cards={cards}
-          radius={radius}
-          cardWidth={card}
-          cardHeight={card}
-          duration={70}
-          draggable
-          autoPlay={!reduce}
-          pauseOnHover
-          cardClassName="!rounded-full ring-1 ring-gold/40 shadow-[0_20px_40px_-12px_rgb(10_0_6/0.7)]"
-          onCardClick={c => cart.add(String(c.id))}
-        />
+      <div ref={ref} className="relative mt-6 h-[min(70vh,34rem)] min-h-[420px]">
+        {ready ? (
+          <Suspense fallback={null}>
+            <ConcaveCarousel
+              items={items}
+              aspect={1}
+              size={0.5}
+              curvature={0.7}
+              autoplay={reduce ? 'off' : 'drift'}
+              wheel={false}
+              captions
+              controls
+              backgroundColor="transparent"
+              className="!h-full text-cream"
+              ariaLabel="קיר מגשים מעוקל. גררו או השתמשו בחצים כדי לעבור בין המגשים."
+              onSelect={(_, i) => ids[i] && cart.add(ids[i])}
+            />
+          </Suspense>
+        ) : (
+          <div className="no-scrollbar flex h-full items-center gap-4 overflow-x-auto px-5">
+            {items.slice(0, 6).map(it => <img key={it.src} src={it.src} alt={it.alt} className="h-3/4 shrink-0 rounded-3xl object-cover" style={{ aspectRatio: 1 }} />)}
+          </div>
+        )}
       </div>
     </section>
   );
