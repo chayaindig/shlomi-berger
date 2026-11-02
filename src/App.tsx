@@ -17,7 +17,6 @@ export default function App() {
   const [cart, setCart] = useState<Record<string, number>>({});
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState('');
-  const [appleText, setAppleText] = useState('');
 
   useEffect(() => watchOrphans(), []);
   useEffect(() => watchPageColor(), []);
@@ -46,7 +45,7 @@ export default function App() {
         <FruitTrio n={0} />
         <Carving cart={api} />
         <FruitTrio n={1} />
-        <AppleBlessing cart={api} text={appleText} setText={setAppleText} />
+        <AppleBlessing cart={api} />
         <PlatterWall cart={api} />
         <FruitTrio n={2} />
         <Catalog cart={api} />
@@ -98,7 +97,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <CartDrawer open={open} onClose={() => setOpen(false)} cart={cart} setCart={setCart} appleText={appleText} />
+      <CartDrawer open={open} onClose={() => setOpen(false)} cart={cart} setCart={setCart} />
       <CursorTrail />
     </>
   );
@@ -131,8 +130,7 @@ function Header({ count, onCart }: { count: number; onCart: () => void }) {
   );
 }
 
-function CartDrawer({ open, onClose, cart, setCart, appleText }: {
-  appleText: string;
+function CartDrawer({ open, onClose, cart, setCart }: {
   open: boolean; onClose: () => void; cart: Record<string, number>; setCart: React.Dispatch<React.SetStateAction<Record<string, number>>>;
 }) {
   const [d, setD] = useState({ date: '', time: '', name: '', phone: '', address: '', greeting: '' });
@@ -158,7 +156,7 @@ function CartDrawer({ open, onClose, cart, setCart, appleText }: {
     return '';
   };
   const message = () =>
-    `הזמנה חדשה מהאתר 🍉\n${lines.map(l => `${l.qty} × ${l.name} (${l.detail})${l.price ? ' · ' + money(l.price * l.qty) : ''}`).join('\n')}\n\nתאריך: ${d.date.split('-').reverse().join('/')} · ${d.time}\nכתובת: ${d.address}\nשם: ${d.name} · ${d.phone}${d.greeting ? '\nברכה: ' + d.greeting : ''}${cart['x-apple'] && appleText.trim() ? '\nחריטה על התפוח: ' + appleText.trim() : ''}\n\nסה״כ משוער: ${money(total)}${hasCustom ? ' + פריטים בתיאום' : ''}`;
+    `הזמנה חדשה מהאתר 🍉\n${lines.map(l => `${l.qty} × ${l.name} (${l.detail})${l.price ? ' · ' + money(l.price * l.qty) : ''}`).join('\n')}\n\nתאריך: ${d.date.split('-').reverse().join('/')} · ${d.time}\nכתובת: ${d.address}\nשם: ${d.name} · ${d.phone}${d.greeting ? '\nברכה: ' + d.greeting : ''}\n\nסה״כ משוער: ${money(total)}${hasCustom ? ' + פריטים בתיאום' : ''}`;
   const sendWa = () => { const e = validate(); setError(e); if (!e) window.open(waLink(message()), '_blank'); };
   const field = 'w-full rounded-xl border border-ink/15 bg-white/70 px-3.5 py-2.5 text-ink focus:border-wine focus:outline-none';
 
@@ -191,7 +189,7 @@ function CartDrawer({ open, onClose, cart, setCart, appleText }: {
                         {l.tray && <img src={img(`catalog/${l.id}.webp`)} alt="" className="size-14 rounded-xl object-cover" />}
                         <div className="min-w-0 flex-1">
                           <p className="font-medium leading-tight">{l.name}</p>
-                          <p className="truncate text-note text-ink-soft">{l.id === 'x-apple' && appleText.trim() ? `חריטה: ${appleText.trim()}` : l.detail}</p>
+                          <p className="truncate text-note text-ink-soft">{l.detail}</p>
                           <p className="text-note">{l.price === null ? 'מחיר בתיאום' : (l.from ? 'החל מ-' : '') + money(l.price * l.qty)}</p>
                         </div>
                         <div className="flex items-center gap-1.5">
@@ -221,7 +219,7 @@ function CartDrawer({ open, onClose, cart, setCart, appleText }: {
                     <label className="col-span-2"><span className="mb-1 block text-note text-ink-soft">כתובת למשלוח</span><input value={d.address} onChange={set('address')} className={field} placeholder={`רחוב, מספר ועיר (${business.areas.join(', ')})`} /></label>
                     <label><span className="mb-1 block text-note text-ink-soft">שם</span><input value={d.name} onChange={set('name')} className={field} autoComplete="name" /></label>
                     <label><span className="mb-1 block text-note text-ink-soft">טלפון</span><input type="tel" value={d.phone} onChange={set('phone')} className={field} autoComplete="tel" dir="ltr" /></label>
-                    <label className="col-span-2"><span className="mb-1 block text-note text-ink-soft">ברכה על המגש (לא חובה)</span><input value={d.greeting} onChange={set('greeting')} className={field} placeholder="מזל טוב!" /></label>
+                    <label className="col-span-2"><span className="mb-1 block text-note text-ink-soft">ברכה על המגש (לא חובה)</span><input value={d.greeting} onChange={set('greeting')} className={field} placeholder={cart['x-apple'] ? 'ברכה למגש, ומה לחרוט על התפוח' : 'מזל טוב!'} /></label>
                   </div>
                 </>
               )}

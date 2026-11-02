@@ -136,53 +136,90 @@ export function Carving({ cart }: { cart: CartApi }) {
   );
 }
 
-/* ───────────── Personal touch: blessings engraved on apples ───────────── */
-const presets = ['מזל טוב', 'שנה טובה', 'אוהבים אותך', 'בהצלחה!'];
+/* ───────────── Personal touch: Shlomi's real engraved apples, turning on their own ───────────── */
+const apples = [
+  { src: 'love', alt: 'תפוח חרוט: אוהבת אותך' },
+  { src: '13', alt: 'תפוח חרוט: מזל טוב 13' },
+  { src: 'girl', alt: "תפוח חרוט: It's a girl" },
+  { src: 'book', alt: 'תפוח חרוט עם לוחות הברית וברכה' },
+  { src: 'heart', alt: 'תפוח חרוט עם לב וברכה לאחות' },
+];
 
-export function AppleBlessing({ cart, text, setText }: { cart: CartApi; text: string; setText: (t: string) => void }) {
-  const shown = text.trim() || 'מזל טוב';
-  const size = shown.length > 14 ? 'text-[clamp(0.95rem,2.6vw,1.6rem)]' : shown.length > 8 ? 'text-[clamp(1.2rem,3.4vw,2.1rem)]' : 'text-[clamp(1.5rem,4.4vw,2.8rem)]';
+function AppleCarousel() {
+  const reduce = useReducedMotion();
+  const [active, setActive] = useState(0);
+  const [hold, setHold] = useState(false);
+  useEffect(() => {
+    if (reduce || hold) return;
+    const t = setInterval(() => setActive(a => (a + 1) % apples.length), 2600);
+    return () => clearInterval(t);
+  }, [reduce, hold]);
+
+  return (
+    <div
+      className="relative mx-auto aspect-[5/4] w-full max-w-[34rem]"
+      onMouseEnter={() => setHold(true)}
+      onMouseLeave={() => setHold(false)}
+      aria-roledescription="carousel"
+      aria-label="תפוחים שחרט שלומי"
+    >
+      {apples.map((a, i) => {
+        // offset in the ring: 0 is centre, -1/1 the neighbours, the rest wait behind
+        let d = i - active;
+        if (d > apples.length / 2) d -= apples.length;
+        if (d < -apples.length / 2) d += apples.length;
+        const far = Math.abs(d) > 1;
+        return (
+          <motion.img
+            key={a.src}
+            src={img(`apples/${a.src}.webp`)}
+            alt={d === 0 ? a.alt : ''}
+            aria-hidden={d !== 0}
+            loading="lazy"
+            onClick={() => setActive(i)}
+            initial={false}
+            animate={{
+              x: `${-d * 62}%`,
+              scale: d === 0 ? 1 : 0.58,
+              rotate: d === 0 ? 0 : d * -8,
+              opacity: far ? 0 : d === 0 ? 1 : 0.55,
+              zIndex: d === 0 ? 3 : far ? 1 : 2,
+            }}
+            transition={{ type: 'spring', stiffness: 120, damping: 18 }}
+            className={`absolute inset-0 m-auto h-[88%] w-auto cursor-pointer object-contain drop-shadow-[0_28px_30px_rgb(42_20_36/0.35)] ${far ? 'pointer-events-none' : ''}`}
+          />
+        );
+      })}
+      <div className="absolute inset-x-0 -bottom-6 flex justify-center gap-2">
+        {apples.map((a, i) => (
+          <button
+            key={a.src}
+            onClick={() => setActive(i)}
+            aria-label={`תפוח ${i + 1}`}
+            className={`h-1.5 rounded-full transition-all duration-300 ${i === active ? 'w-6 bg-wine' : 'w-1.5 bg-ink/25'}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function AppleBlessing({ cart }: { cart: CartApi }) {
   return (
     <section id="apple" data-bg="#f4ede3" data-trail="apple" className="paper overflow-x-clip px-5 py-20 text-ink md:px-8 md:py-28">
-      <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2 md:gap-16">
-        <div className="relative mx-auto w-[min(82vw,26rem)]">
-          <img src={img('fruit/apple.webp')} alt="תפוח אדום עם חלון חרוט בקליפה" className="w-full drop-shadow-[0_30px_40px_rgb(42_20_36/0.3)]" loading="lazy" />
-          {/* The blessing sits on the peeled panel, pressed into the flesh */}
-          <div className="absolute left-[38%] top-[36%] grid h-[48%] w-[54%] -rotate-3 place-items-center px-[4%] text-center">
-            <motion.span
-              key={shown}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className={`engraved block font-display leading-[1.05] ${size}`}
-            >
-              {shown}
-            </motion.span>
-          </div>
-        </div>
+      <div className="mx-auto grid max-w-6xl items-center gap-14 md:grid-cols-2 md:gap-16">
+        <AppleCarousel />
         <div>
-          <h2 className="mt-5 text-section text-ink">ברכה <Stroke>חרוטה על תפוח.</Stroke></h2>
+          <h2 className="text-section text-ink">ברכה <Stroke>חרוטה על תפוח.</Stroke></h2>
           <p className="mt-5 max-w-lg text-ink-soft">
-            הסימן של שלומי: תפוח אדום עם חלון בקליפה, והברכה שלכם חרוטה בתוכו ביד. נגיעה קטנה שהופכת מגש למתנה שזוכרים.
+            הסימן של שלומי: תפוח אדום, והברכה שלכם נחרטת בקליפה ביד. אוהבת אותך, מזל טוב, שם של תינוקת חדשה או ברכה שלמה לאחות. נגיעה קטנה שהופכת מגש למתנה שזוכרים.
           </p>
-          <label className="mt-8 block">
-            <span className="mb-2 block text-note font-medium text-ink-soft">נסו בעצמכם, מה לחרוט?</span>
-            <input
-              value={text}
-              onChange={e => setText(e.target.value.slice(0, 22))}
-              placeholder="מזל טוב"
-              className="w-full max-w-md rounded-2xl border border-ink/20 bg-white/70 px-4 py-3 font-display text-sub text-ink focus:border-wine focus:outline-none"
-            />
-          </label>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {presets.map(p => (
-              <button key={p} onClick={() => setText(p)} className="rounded-full border border-ink/20 px-3.5 py-1.5 text-note text-ink transition-colors hover:border-wine hover:text-wine">{p}</button>
-            ))}
-          </div>
-          <div className="mt-7 flex flex-wrap items-center gap-4">
+          <p className="mt-5 max-w-lg font-display text-sub text-wine">אין גבול למה שאפשר לחרוט: מילה, שם, מספר, ציור או לוגו.</p>
+          <div className="mt-8 flex flex-wrap items-center gap-4">
             <button onClick={() => cart.add('x-apple')} className="inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-wine px-7 py-3.5 font-medium text-cream transition-colors hover:bg-plum">
               להוסיף תפוח חרוט
             </button>
-            <span className="text-note text-ink-soft">{money(40)} לתפוח · הברכה עוברת להזמנה</span>
+            <span className="text-note text-ink-soft">החל מ-{money(40)} לתפוח · את הנוסח כותבים בהזמנה</span>
           </div>
         </div>
       </div>
