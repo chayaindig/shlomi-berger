@@ -107,6 +107,16 @@ body {
     radial-gradient(ellipse 26% 20% at 55% 95%, #000 15%, transparent 70%);
 }
 
+/* Word in a gold box, like Palmo's "FRESH" */
+.framed {
+  display: inline-block;
+  background: var(--color-gold);
+  color: var(--color-night);
+  padding: 0 0.18em 0.04em;
+  border-radius: 0.12em;
+  transform: rotate(-2deg);
+}
+
 /* Paper grain for cream sections */
 .paper {
   background-image:

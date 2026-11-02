@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { business, extras, img, money, products, waLink } from './data';
 import { watchOrphans } from './noOrphans';
 import { watchPageColor } from './pageColor';
-import { About, Catalog, Events, Faq, Footer, Hero, HowToOrder, Testimonials, Ticker, Works } from './Sections';
+import { About, Catalog, Events, Faq, Footer, FruitStory, Hero, HowToOrder, Testimonials, Ticker, Works } from './Sections';
 import { Icon } from './ui';
 
 const allItems = [...products.map(p => ({ id: p.id, name: p.name, detail: p.size, price: p.price as number | null, from: p.from, tray: true })),
@@ -37,6 +37,7 @@ export default function App() {
       <Header count={count} onCart={() => setOpen(true)} />
       <main>
         <Hero />
+        <FruitStory />
         <Ticker />
         <Works />
         <Catalog cart={api} />

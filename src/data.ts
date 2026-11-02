@@ -64,7 +64,6 @@ export const extras: Extra[] = [
 ];
 
 export const works = [
-  { src: img('real-platter.webp'), title: 'מגש בר מצווה', text: 'אבטיח מגולף עם ספר תורה, ומסביב פרחים מפפאיה, ליצ׳י ותפוחים.', tag: 'גילוף אישי' },
   { src: img('real-carving.webp'), title: 'שולחן לאירוע', text: 'ורד מגולף, פיטאיה, ליצ׳י וענבים, בשילוב צבעים שבונה עומק.', tag: 'אירועים' },
   { src: img('real-bouquet.webp'), title: 'זר פירות על מגש', text: 'זר מפסיפלורה, תות וקיווי, עם ורד ממנגו בחזית.', tag: 'זרי פירות' },
 ];
