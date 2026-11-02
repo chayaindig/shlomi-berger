@@ -1,7 +1,7 @@
 import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from 'motion/react';
 import { useRef, useState } from 'react';
 import { business, categories, eventServices, extras, faq, img, money, products, testimonials, waLink, works, type Category } from './data';
-import { Button, Eyebrow, Icon, Reveal, ScrollWords, Stroke } from './ui';
+import { Button, Icon, Reveal, ScrollWords, Stroke } from './ui';
 
 type CartApi = { qty: (id: string) => number; add: (id: string) => void; openCart: () => void };
 
@@ -468,9 +468,9 @@ export function Events() {
       <Float src="fruit/mint.webp" className="-right-4 bottom-16 w-20 md:right-[3%] md:w-28" speed={-110} turn={20} />
       <div className="relative mx-auto grid max-w-6xl gap-12 lg:grid-cols-2 lg:gap-20">
         <div>
-          <h2 className="mt-5 text-section text-cream">יש לכם אירוע? <span className="gold-text">נבנה אותו בפירות.</span></h2>
+          <h2 className="mt-5 text-section text-cream">אירוע, עסק או חג? <span className="gold-text">נבנה את זה בפירות.</span></h2>
           <p className="mt-5 max-w-lg text-mist">
-            מגש אחד גדול, שולחן שלם או עמדה שהאורחים לא עוזבים. ספרו מה האירוע, ושלומי יחזור עם הצעה מסודרת.
+            שולחן שלם לאירוע, עמדה שהאורחים לא עוזבים או מארזי חג ללקוחות של העסק. ספרו מה צריך, ושלומי יחזור עם הצעה מסודרת.
           </p>
           <ul className="mt-10">
             {eventServices.map(s => (
@@ -500,7 +500,7 @@ export function Events() {
               <label>
                 <span className="mb-1.5 block text-note text-mist">סוג האירוע</span>
                 <select value={form.type} onChange={set('type')} className={field}>
-                  {['בר/בת מצווה', 'חתונה', 'ברית', 'יום הולדת', 'אירוע חברה', 'אחר'].map(o => <option key={o} className="bg-night">{o}</option>)}
+                  {['בר/בת מצווה', 'חתונה', 'ברית', 'יום הולדת', 'מארזי חג לעסק', 'אירוע חברה', 'אחר'].map(o => <option key={o} className="bg-night">{o}</option>)}
                 </select>
               </label>
               <label>

@@ -12,6 +12,26 @@ export const business = {
   fromPrice: 285,
 };
 
+// Delivery prices from Shlomi (2.11). TODO: confirm Modiin, he wrote "7" and it's probably 70.
+export const zones = [
+  { id: 'pickup', label: 'איסוף עצמי', price: 0 },
+  { id: 'givat-zeev', label: 'גבעת זאב', price: 30 },
+  { id: 'jerusalem', label: 'ירושלים', price: 65 },
+  { id: 'modiin', label: 'מודיעין', price: 70 },
+  { id: 'center', label: 'מרכז ובית שמש', price: 180 },
+  { id: 'other', label: 'אזור אחר, שלומי יבדוק', price: null as number | null },
+];
+
+// Shlomi changes these himself before holidays and busy days.
+export const availability = {
+  // Dates with no orders at all, as 'YYYY-MM-DD'
+  blockedDates: [] as string[],
+  // Minimum order in ₪. Default is the smallest tray, holidays can raise it.
+  minOrder: 285,
+  // TODO: delivery hour windows, Shlomi wants to sit on this (like his colleague's site)
+  timeSlots: ['8:00-11:00', '11:00-14:00', '14:00-17:00', '17:00-20:00'],
+};
+
 export type Category = 'round' | 'rect' | 'special';
 export type Product = { id: string; name: string; size: string; price: number; category: Category; serves: string; from?: boolean };
 
@@ -54,12 +74,12 @@ export const categories: { id: Category | 'all'; label: string }[] = [
 
 export type Extra = { id: string; name: string; note: string; price: number | null; from?: boolean };
 export const extras: Extra[] = [
-  { id: 'x-carve', name: 'אבטיח מגולף', note: 'ברכה, שם או ציור, מגולפים ביד', price: 420, from: true },
-  { id: 'x-bouquet', name: 'זר פירות', note: 'זר מפירות טריים במקום פרחים', price: 350, from: true },
-  { id: 'x-apple', name: 'תפוח מגולף', note: 'נגיעה קטנה על המגש', price: 40, from: true },
-  { id: 'x-praline', name: 'פרלין בוטיק', note: 'ליחידה', price: 12 },
+  { id: 'x-apple', name: 'תפוח מגולף', note: 'ברכה חרוטה על המגש', price: 40, from: true },
+  { id: 'x-praline', name: 'פרלינים', note: 'ליחידה', price: 12 },
   { id: 'x-nuts', name: 'פיצוחים', note: 'מחיר לפי גודל', price: null },
   { id: 'x-wine', name: 'בקבוק יין', note: 'לפי בחירה, מחיר בתיאום', price: null },
+  { id: 'x-carve', name: 'אבטיח מגולף', note: 'ברכה, שם או ציור, מגולפים ביד', price: 420, from: true },
+  { id: 'x-bouquet', name: 'זר פירות', note: 'זר מפירות טריים במקום פרחים', price: 350, from: true },
   { id: 'x-shake', name: 'שייק פירות 250 מ״ל', note: 'סחוט טרי', price: 26 },
 ];
 
@@ -73,17 +93,19 @@ export const eventServices = [
   { n: '01', title: 'שולחנות פירות לאירוע', text: 'בר מצווה, חתונה, ברית או כנס. שולחן שלם שנבנה במקום, עם גילופים במרכז.' },
   { n: '02', title: 'בר פירות', text: 'עמדה מעוצבת שהאורחים ניגשים אליה, עם פירות חתוכים, שייקים ופינוקים.' },
   { n: '03', title: 'עוגות פירות', text: 'עוגה שכולה פרי, לימי הולדת ולמי שמחפש משהו מתוק אחר.' },
-  { n: '04', title: 'מארזים לחברות ולחגים', text: 'מגשים עם פרלינים, פיצוחים ויין, למשרד, ללקוחות או לצוות.' },
+  { n: '04', title: 'מארזים לעסקים ולחגים', text: 'מגשים עם פרלינים, פיצוחים ויין, ללקוחות, לספקים או לצוות. משלוח לכמה כתובות בתיאום.' },
 ];
 
 // TODO: real answers from Shlomi. Kashrut is a placeholder until he confirms.
 export const faq = [
   { q: 'כמה זמן מראש צריך להזמין?', a: 'למגש רגיל מספיק יום אחד מראש. לאירועים ולגילופים אישיים כדאי לפנות כמה ימים קודם, כדי שנספיק לתכנן יחד.' },
-  { q: 'לאן אתם מגיעים?', a: 'ירושלים, גבעת זאב ומודיעין. משלוח לאזור אחר אפשר לבדוק בוואטסאפ.' },
+  { q: 'כמה עולה משלוח?', a: 'גבעת זאב 30 ₪, ירושלים 65 ₪, מודיעין 70 ₪, ומרכז ובית שמש 180 ₪. אפשר גם לאסוף בעצמכם בלי עלות. לאזור אחר כותבים בהזמנה ושלומי בודק.' },
+  { q: 'איך יודעים אם יש מקום בתאריך שלי?', a: 'בוחרים תאריך וחלון שעות בהזמנה. ימים שאין בהם הזמנות פשוט לא ייפתחו, וכל השאר מאושר מול שלומי לפני ההכנה.' },
+  { q: 'אפשר לשלוח מגש למישהו אחר?', a: 'בדיוק בשביל זה יש בהזמנה שם וטלפון של מי שמקבל. ואם אתם לא בטוחים בכתובת, מסמנים ושלומי מתאם איתו ישירות.' },
   { q: 'המגש ייראה בדיוק כמו בתמונה?', a: 'כל מגש מעוצב ביד ומתאים את עצמו לפירות הכי טובים של העונה. הצורה, הגודל והסגנון נשארים, והצבעים תמיד מפתיעים לטובה.' },
   { q: 'אפשר להוסיף ברכה או שם?', a: 'בטח. כותבים את הברכה בהזמנה, ואפשר להוסיף אבטיח מגולף עם שם או ציור.' },
   { q: 'יש כשרות?', a: 'כאן תיכנס התשובה של שלומי לגבי כשרות.' },
-  { q: 'איך משלמים?', a: 'מגשים מהקטלוג משלמים באתר בסיום ההזמנה. לאירועים שולחים פרטים ומקבלים הצעת מחיר מסודרת.' },
+  { q: 'איך משלמים?', a: 'מגשים מהקטלוג משלמים באתר בסיום ההזמנה, את כל הסכום מראש. לאירועים, לחברות ולמארזי חג שולחים פרטים ומקבלים הצעת מחיר מסודרת.' },
 ];
 
 // Placeholders until real quotes arrive (shown as dashed cards).

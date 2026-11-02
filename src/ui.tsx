@@ -14,18 +14,6 @@ export function Icon({ name, className = 'size-5' }: { name: string; className?:
   );
 }
 
-/** Small editorial label: number, thin line, title */
-export function Eyebrow({ n, children, tone = 'gold' }: { n?: string; children: ReactNode; tone?: 'gold' | 'deep' }) {
-  const color = tone === 'gold' ? 'text-gold' : 'text-gold-deep';
-  return (
-    <div className={`flex items-center gap-3 text-note font-medium tracking-wide ${color}`}>
-      {n && <span className="font-display text-sub font-extralight leading-none">{n}</span>}
-      <span className="h-px w-10 bg-current opacity-60" />
-      <span>{children}</span>
-    </div>
-  );
-}
-
 /** Fades and lifts children in once they enter the screen */
 export function Reveal({ children, delay = 0, className = '' }: { children: ReactNode; delay?: number; className?: string }) {
   const reduce = useReducedMotion();
@@ -81,36 +69,4 @@ export function Button({ href, onClick, children, variant = 'gold', className = 
   const cls = `inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full px-7 py-3.5 text-body font-medium transition-colors duration-300 ${styles} ${className}`;
   if (href) return <a href={href} className={cls} target={href.startsWith('http') ? '_blank' : undefined} rel="noreferrer">{children}</a>;
   return <button type="button" onClick={onClick} className={cls}>{children}</button>;
-}
-
-/** The only divider between sections: three fruits, a different trio each time */
-const trios = [
-  ['straw', 'kiwi', 'mint'],
-  ['seeds', 'fig', 'mint'],
-  ['kiwi', 'seeds', 'straw'],
-  ['fig', 'straw', 'mint'],
-  ['mint', 'pomegranate', 'seeds'],
-  ['straw', 'fig', 'kiwi'],
-];
-export function FruitTrio({ n }: { n: number }) {
-  const reduce = useReducedMotion();
-  const set = trios[n % trios.length];
-  const tilt = [-14, 6, 18];
-  return (
-    <div aria-hidden className="flex items-end justify-center gap-5 py-8 md:py-10">
-      {set.map((f, i) => (
-        <motion.img
-          key={f + i}
-          src={`${import.meta.env.BASE_URL}img/fruit/${f}.webp`}
-          alt=""
-          loading="lazy"
-          initial={reduce ? false : { opacity: 0, y: 14, rotate: 0, scale: 0.7 }}
-          whileInView={{ opacity: 1, y: i === 1 ? -6 : 0, rotate: tilt[i], scale: 1 }}
-          viewport={{ once: true, margin: '-10% 0px' }}
-          transition={{ delay: i * 0.1, type: 'spring', stiffness: 220, damping: 16 }}
-          className={`w-auto drop-shadow-[0_10px_12px_rgb(20_0_10/0.35)] ${i === 1 ? 'h-12 md:h-14' : 'h-9 md:h-11'}`}
-        />
-      ))}
-    </div>
-  );
 }

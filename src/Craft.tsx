@@ -18,7 +18,7 @@ function useReadyNear(ref: RefObject<Element | null>) {
   }, [loaded]);
   return near && loaded;
 }
-import { Button, Eyebrow, Reveal, Stroke } from './ui';
+import { Button, Reveal, Stroke } from './ui';
 
 type CartApi = { qty: (id: string) => number; add: (id: string) => void; openCart: () => void };
 
