@@ -16,7 +16,7 @@ export function Hero() {
   const spin = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : 40]);
 
   return (
-    <section ref={ref} id="top" data-bg="#4a0b2c" className="pom-skin relative overflow-x-clip pt-24 md:pt-28">
+    <section ref={ref} id="top" data-bg="#4a0b2c" data-trail="pomegranate" className="pom-skin relative overflow-x-clip pt-24 md:pt-28">
       <div className="mx-auto grid max-w-7xl items-center gap-6 px-5 pb-12 md:px-8 lg:grid-cols-[1.05fr_1fr] lg:gap-10 lg:pb-24">
         <div className="relative z-10">
           <Reveal>
@@ -114,17 +114,20 @@ export function FruitStory() {
     setPct(Math.round(Math.min(1, Math.max(0, v / 0.92)) * 100));
   });
 
-  const wholeOpacity = useTransform(scrollYProgress, [0.22, 0.34], [1, 0]);
-  const wholeRotate = useTransform(scrollYProgress, [0, 0.34], [reduce ? 0 : -25, reduce ? 0 : 35]);
-  const wholeScale = useTransform(scrollYProgress, [0, 0.3], [0.85, 1.05]);
-  const openOpacity = useTransform(scrollYProgress, [0.26, 0.36, 0.6, 0.7], [0, 1, 1, 0]);
-  const openScale = useTransform(scrollYProgress, [0.26, 0.66], [0.9, 1.08]);
-  const artOpacity = useTransform(scrollYProgress, [0.62, 0.74], [0, 1]);
-  const artScale = useTransform(scrollYProgress, [0.62, 1], [0.86, 1]);
+  // Function transforms on purpose: motion can't hand these to the browser's scroll timeline,
+  // which mapped this sticky section's range wrongly and left the wrong image showing.
+  const ramp = (v: number, a: number, b: number) => Math.min(1, Math.max(0, (v - a) / (b - a)));
+  const wholeOpacity = useTransform(scrollYProgress, v => 1 - ramp(v, 0.22, 0.34));
+  const wholeRotate = useTransform(scrollYProgress, v => (reduce ? 0 : -25 + 60 * ramp(v, 0, 0.34)));
+  const wholeScale = useTransform(scrollYProgress, v => 0.85 + 0.2 * ramp(v, 0, 0.3));
+  const openOpacity = useTransform(scrollYProgress, v => ramp(v, 0.26, 0.36) * (1 - ramp(v, 0.6, 0.7)));
+  const openScale = useTransform(scrollYProgress, v => 0.9 + 0.18 * ramp(v, 0.26, 0.66));
+  const artOpacity = useTransform(scrollYProgress, v => ramp(v, 0.62, 0.74));
+  const artScale = useTransform(scrollYProgress, v => 0.86 + 0.14 * ramp(v, 0.62, 1));
   const bar = useTransform(scrollYProgress, [0, 0.92], ['0%', '100%']);
 
   return (
-    <section ref={ref} id="story" data-bg="#3e0925" className="pom-skin relative h-[320vh]">
+    <section ref={ref} id="story" data-bg="#3e0925" data-trail="pomegranate" className="pom-skin relative h-[320vh]">
       <div className="sticky top-0 flex h-svh items-center overflow-hidden px-5 pt-16 md:px-8">
         <div className="mx-auto grid w-full max-w-6xl items-center gap-4 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
           {/* Text */}
@@ -167,7 +170,7 @@ export function FruitStory() {
             <motion.img style={{ opacity: openOpacity, scale: openScale }} src={img('fruit/pomegranate-open.webp')} alt="רימון פתוח עם גרגרים אדומים" 
               className="absolute inset-0 m-auto w-[88%] drop-shadow-[0_30px_40px_rgb(20_0_10/0.55)]" />
             <motion.div style={{ opacity: artOpacity, scale: artScale }} className="absolute inset-[4%] overflow-hidden rounded-full border border-gold/30 [mask-image:radial-gradient(circle,#000_62%,transparent_71%)]">
-              <img src={img('real-platter.webp')} alt="מגש בר מצווה של שלומי עם אבטיח מגולף" className="size-full object-cover object-[50%_40%]" loading="lazy" />
+              <img src={img('pomegranate-art.webp')} alt="מגש רימונים מעוצב: רימון פתוח כמו פרח במרכז וגרגרים בספירלות (הדמיה)" className="size-full object-cover" loading="lazy" />
             </motion.div>
 
             <AnimatePresence>
@@ -258,11 +261,11 @@ export function Catalog({ cart }: { cart: CartApi }) {
   const list = products.filter(p => filter === 'all' || p.category === filter);
 
   return (
-    <section id="catalog" data-bg="#f4ede3" className="paper scroll-mt-20 px-5 py-20 text-ink md:px-8 md:py-28">
+    <section id="catalog" data-bg="#f4ede3" data-trail="mix" className="paper scroll-mt-20 px-5 py-20 text-ink md:px-8 md:py-28">
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
           <div>
-            <Eyebrow n="03" tone="deep">המגשים</Eyebrow>
+            <Eyebrow n="06" tone="deep">המגשים</Eyebrow>
             <h2 className="mt-5 text-section text-ink">
               רואים את המגש. <Stroke>רואים את המחיר.</Stroke>
             </h2>
@@ -410,7 +413,7 @@ export function HowToOrder() {
       <div className="sticky top-0 flex min-h-svh items-center px-5 pb-6 pt-20 md:px-8 md:py-20">
         <div className="mx-auto grid w-full max-w-6xl items-center gap-8 lg:grid-cols-[1fr_auto] lg:gap-20">
           <div>
-            <Eyebrow n="04">איך מזמינים</Eyebrow>
+            <Eyebrow n="07">איך מזמינים</Eyebrow>
             <h2 className="mt-3 text-section text-cream lg:mt-5">שלושה צעדים, <span className="gold-text">וזהו.</span></h2>
             <ol className="mt-8 hidden space-y-1 lg:block">
               {steps.map((s, i) => (
@@ -487,13 +490,13 @@ export function Events() {
   const field = 'w-full rounded-2xl border border-cream/15 bg-night/50 px-4 py-3 text-cream placeholder:text-mist/60 focus:border-gold focus:outline-none';
 
   return (
-    <section id="events" data-bg="#5a1036" className="pom-skin relative overflow-x-clip scroll-mt-16 px-5 py-20 md:px-8 md:py-32">
+    <section id="events" data-bg="#5a1036" data-trail="mix" className="pom-skin relative overflow-x-clip scroll-mt-16 px-5 py-20 md:px-8 md:py-32">
       <Float src="fruit/fig.webp" className="-left-6 top-10 w-28 md:left-[4%] md:w-40" speed={-140} turn={16} />
       <Float src="fruit/seeds.webp" className="right-[42%] top-6 hidden w-24 lg:block" speed={-70} turn={-10} />
       <Float src="fruit/mint.webp" className="-right-4 bottom-16 w-20 md:right-[3%] md:w-28" speed={-110} turn={20} />
       <div className="relative mx-auto grid max-w-6xl gap-12 lg:grid-cols-2 lg:gap-20">
         <div>
-          <Eyebrow n="05">אירועים וחברות</Eyebrow>
+          <Eyebrow n="08">אירועים וחברות</Eyebrow>
           <h2 className="mt-5 text-section text-cream">יש לכם אירוע? <span className="gold-text">נבנה אותו בפירות.</span></h2>
           <p className="mt-5 max-w-lg text-mist">
             מגש אחד גדול, שולחן שלם או עמדה שהאורחים לא עוזבים. ספרו מה האירוע, ושלומי יחזור עם הצעה מסודרת.
@@ -562,7 +565,7 @@ export function About() {
           <img src={img('shlomi.webp')} alt="שלומי ברגר" loading="lazy" className="relative aspect-[4/5] w-full rounded-[2rem] object-cover object-top" />
         </Reveal>
         <div>
-          <Eyebrow n="06" tone="deep">נעים להכיר</Eyebrow>
+          <Eyebrow n="09" tone="deep">נעים להכיר</Eyebrow>
           <h2 className="mt-5 text-section text-ink">שלומי ברגר</h2>
           <p className="mt-6 max-w-xl font-display text-sub text-ink">
             בשבילי פרי הוא חומר גלם, כמו צבע לצייר. <Stroke>כל מגש מתחיל מדף ריק.</Stroke>
@@ -641,7 +644,7 @@ export function Faq() {
     <section id="faq" data-bg="#ebe1d2" className="scroll-mt-16 px-5 py-20 text-ink md:px-8 md:py-28">
       <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[0.8fr_1.2fr]">
         <div>
-          <Eyebrow n="07" tone="deep">לפני שמזמינים</Eyebrow>
+          <Eyebrow n="10" tone="deep">לפני שמזמינים</Eyebrow>
           <h2 className="mt-5 text-section text-ink">שאלות ששואלים</h2>
           <p className="mt-4 max-w-sm text-ink-soft">לא מצאתם? שלומי עונה בוואטסאפ.</p>
           <Button href={waLink('היי שלומי, יש לי שאלה לגבי מגש')} variant="ghost-dark" className="mt-6">

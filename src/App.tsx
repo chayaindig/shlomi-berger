@@ -5,6 +5,8 @@ import { watchOrphans } from './noOrphans';
 import { watchPageColor } from './pageColor';
 import { About, Catalog, Events, Faq, Footer, FruitStory, Hero, HowToOrder, Testimonials, Ticker, Works } from './Sections';
 import { Icon } from './ui';
+import { AppleBlessing, Carving, PlatterRing } from './Craft';
+import { CursorTrail } from './CursorTrail';
 
 const allItems = [...products.map(p => ({ id: p.id, name: p.name, detail: p.size, price: p.price as number | null, from: p.from, tray: true })),
   ...extras.map(x => ({ id: x.id, name: x.name, detail: x.note, price: x.price, from: x.from, tray: false }))];
@@ -15,6 +17,7 @@ export default function App() {
   const [cart, setCart] = useState<Record<string, number>>({});
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState('');
+  const [appleText, setAppleText] = useState('');
 
   useEffect(() => watchOrphans(), []);
   useEffect(() => watchPageColor(), []);
@@ -40,6 +43,9 @@ export default function App() {
         <FruitStory />
         <Ticker />
         <Works />
+        <Carving cart={api} />
+        <AppleBlessing cart={api} text={appleText} setText={setAppleText} />
+        <PlatterRing cart={api} />
         <Catalog cart={api} />
         <HowToOrder />
         <Events />
@@ -86,7 +92,8 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <CartDrawer open={open} onClose={() => setOpen(false)} cart={cart} setCart={setCart} />
+      <CartDrawer open={open} onClose={() => setOpen(false)} cart={cart} setCart={setCart} appleText={appleText} />
+      <CursorTrail />
     </>
   );
 }
@@ -118,7 +125,8 @@ function Header({ count, onCart }: { count: number; onCart: () => void }) {
   );
 }
 
-function CartDrawer({ open, onClose, cart, setCart }: {
+function CartDrawer({ open, onClose, cart, setCart, appleText }: {
+  appleText: string;
   open: boolean; onClose: () => void; cart: Record<string, number>; setCart: React.Dispatch<React.SetStateAction<Record<string, number>>>;
 }) {
   const [d, setD] = useState({ date: '', time: '', name: '', phone: '', address: '', greeting: '' });
@@ -144,7 +152,7 @@ function CartDrawer({ open, onClose, cart, setCart }: {
     return '';
   };
   const message = () =>
-    `הזמנה חדשה מהאתר 🍉\n${lines.map(l => `${l.qty} × ${l.name} (${l.detail})${l.price ? ' · ' + money(l.price * l.qty) : ''}`).join('\n')}\n\nתאריך: ${d.date.split('-').reverse().join('/')} · ${d.time}\nכתובת: ${d.address}\nשם: ${d.name} · ${d.phone}${d.greeting ? '\nברכה: ' + d.greeting : ''}\n\nסה״כ משוער: ${money(total)}${hasCustom ? ' + פריטים בתיאום' : ''}`;
+    `הזמנה חדשה מהאתר 🍉\n${lines.map(l => `${l.qty} × ${l.name} (${l.detail})${l.price ? ' · ' + money(l.price * l.qty) : ''}`).join('\n')}\n\nתאריך: ${d.date.split('-').reverse().join('/')} · ${d.time}\nכתובת: ${d.address}\nשם: ${d.name} · ${d.phone}${d.greeting ? '\nברכה: ' + d.greeting : ''}${cart['x-apple'] && appleText.trim() ? '\nחריטה על התפוח: ' + appleText.trim() : ''}\n\nסה״כ משוער: ${money(total)}${hasCustom ? ' + פריטים בתיאום' : ''}`;
   const sendWa = () => { const e = validate(); setError(e); if (!e) window.open(waLink(message()), '_blank'); };
   const field = 'w-full rounded-xl border border-ink/15 bg-white/70 px-3.5 py-2.5 text-ink focus:border-wine focus:outline-none';
 
@@ -177,7 +185,7 @@ function CartDrawer({ open, onClose, cart, setCart }: {
                         {l.tray && <img src={img(`catalog/${l.id}.webp`)} alt="" className="size-14 rounded-xl object-cover" />}
                         <div className="min-w-0 flex-1">
                           <p className="font-medium leading-tight">{l.name}</p>
-                          <p className="truncate text-note text-ink-soft">{l.detail}</p>
+                          <p className="truncate text-note text-ink-soft">{l.id === 'x-apple' && appleText.trim() ? `חריטה: ${appleText.trim()}` : l.detail}</p>
                           <p className="text-note">{l.price === null ? 'מחיר בתיאום' : (l.from ? 'החל מ-' : '') + money(l.price * l.qty)}</p>
                         </div>
                         <div className="flex items-center gap-1.5">
