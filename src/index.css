@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+@font-face { font-family: "Pompei"; src: url("/fonts/PompeiNarrow_FS-Bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Pompei"; src: url("/fonts/PompeiNarrow_FS-Extralight.woff2") format("woff2"); font-weight: 200; font-display: swap; }
+@font-face { font-family: "Polin"; src: url("/fonts/Polin-Extralight.woff2") format("woff2"); font-weight: 200; font-display: swap; }
+@font-face { font-family: "Polin"; src: url("/fonts/Polin-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Polin"; src: url("/fonts/Polin-Medium.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+
+@theme {
+  --font-sans: "Polin", "Assistant", system-ui, sans-serif;
+  --font-display: "Pompei", "Polin", system-ui, sans-serif;
+
+  /* Palette from the logo: plum night, pomegranate wine, gold leaf, paper cream */
+  --color-night: #1a0b17;
+  --color-plum: #3b1534;
+  --color-wine: #6b1d3a;
+  --color-gold: #d6b26e;
+  --color-gold-deep: #8a6a2f;
+  --color-cream: #f4ede3;
+  --color-sand: #ebe1d2;
+  --color-ink: #2a1424;
+  --color-ink-soft: #5e4a57;
+  --color-mist: #d9cbd3;
+
+  /* Five text sizes only */
+  --text-hero: clamp(2.9rem, 9vw, 7.25rem);
+  --text-hero--line-height: 0.95;
+  --text-section: clamp(2.3rem, 5.4vw, 4.5rem);
+  --text-section--line-height: 1;
+  --text-sub: clamp(1.3rem, 2.2vw, 1.65rem);
+  --text-sub--line-height: 1.25;
+  --text-body: clamp(1rem, 0.94rem + 0.25vw, 1.15rem);
+  --text-body--line-height: 1.65;
+  --text-note: 0.875rem;
+  --text-note--line-height: 1.5;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root { --page-bg: #1a0b17; color-scheme: dark; }
+
+html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; overflow-x: clip; }
+
+body {
+  background: var(--page-bg);
+  color: var(--color-cream);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: var(--text-body);
+  line-height: var(--text-body--line-height);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+@layer base {
+  h1, h2, h3, h4, blockquote { text-wrap-style: balance; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.01em; }
+  p, li, dd, figcaption, summary { text-wrap-style: pretty; }
+}
+
+::selection { background: var(--color-gold); color: var(--color-night); }
+:focus-visible { outline: 2px solid var(--color-gold); outline-offset: 3px; border-radius: 6px; }
+
+/* Gold leaf text, matching the logo */
+.gold-text {
+  background: linear-gradient(110deg, #9c7a3c 0%, #e9cf94 32%, #c9a35c 52%, #f3dfae 70%, #a8833f 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gold-move 9s ease-in-out infinite alternate;
+}
+@keyframes gold-move { to { background-position: 100% 0; } }
+
+/* Gold underline stroke that draws itself under a key word */
+.stroke {
+  background-image: linear-gradient(var(--color-gold), var(--color-gold));
+  background-repeat: no-repeat;
+  background-size: 0% 2px;
+  background-position: right 100%;
+  transition: background-size 1s var(--ease-out-soft) 0.3s;
+  padding-bottom: 0.06em;
+}
+.stroke.is-on { background-size: 100% 2px; }
+
+/* Paper grain for cream sections */
+.paper {
+  background-image:
+    radial-gradient(circle at 20% 10%, rgb(255 255 255 / 0.5), transparent 40%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .25 0 0 0 0 .2 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.ticker { animation: ticker 38s linear infinite; }
+@keyframes ticker { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+details > summary { list-style: none; cursor: pointer; }
+details > summary::-webkit-details-marker { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .ticker, .gold-text { animation: none; }
+  .stroke { transition: none; background-size: 100% 2px; }
+}
