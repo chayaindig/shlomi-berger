@@ -55,7 +55,6 @@ export function Hero() {
               src={img('real-platter.webp')}
               alt="מגש פירות מעוצב של שלומי עם אבטיח מגולף בצורת ספר תורה"
               className="size-full object-cover object-[50%_40%]"
-              {...{ fetchpriority: 'high' }}
             />
           </div>
           <div className="absolute bottom-[8%] right-0 rounded-2xl border border-gold/25 bg-night/85 px-4 py-3 text-note shadow-xl md:right-[-2%]">
