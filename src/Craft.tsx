@@ -105,7 +105,7 @@ function CarveReveal() {
 export function Carving({ cart }: { cart: CartApi }) {
   const reduce = useReducedMotion();
   return (
-    <section id="carving" data-bg="#33071f" data-trail="watermelon" className="pom-skin px-5 py-20 md:px-8 md:py-32">
+    <section id="carving" data-bg="#33071f" className="pom-skin px-5 py-20 md:px-8 md:py-32">
       <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-20">
         <div>
           <Eyebrow n="03">גילוף אבטיח</Eyebrow>
