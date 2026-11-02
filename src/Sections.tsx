@@ -2,6 +2,7 @@ import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScro
 import { useRef, useState } from 'react';
 import { business, categories, eventServices, extras, faq, img, money, products, testimonials, waLink, works, type Category } from './data';
 import { HeroFruits } from './HeroFruits';
+import { LuminousType } from './components/LuminousType';
 import { Button, Icon, Reveal, ScrollWords, Stroke } from './ui';
 
 type CartApi = { qty: (id: string) => number; add: (id: string) => void; openCart: () => void };
@@ -631,7 +632,24 @@ export function Footer({ cart }: { cart: CartApi }) {
     <footer data-bg="#2e061b" className="pom-skin relative overflow-hidden px-5 pb-28 pt-24 md:px-8 md:pb-16">
       <div aria-hidden className="absolute inset-x-0 top-0 h-[32rem] bg-[radial-gradient(ellipse_at_50%_0%,rgb(125_24_70/0.55),transparent_65%)]" />
       <div className="relative mx-auto max-w-6xl text-center">
-        <h2 className="mx-auto max-w-3xl text-section text-cream">מישהו מחכה למגש <span className="gold-text">שלא ישכח.</span></h2>
+        <h2 className="mx-auto max-w-3xl text-section text-cream">מישהו מחכה למגש{' '}
+          <LuminousType
+            as="span"
+            text="שלא ישכח."
+            fontSize="1em"
+            lineHeight={1.1}
+            letterSpacing="normal"
+            maxWidth=""
+            color="#fff4dc"
+            baseColor="#d6b26e"
+            tint="#e9cf94"
+            baseOpacity={0.38}
+            radius={2.6}
+            softness={0.7}
+            className="whitespace-nowrap align-baseline"
+            style={{ fontWeight: 'inherit', whiteSpace: 'nowrap' }}
+          />
+        </h2>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Button href="#catalog">לבחירת מגש</Button>
           <Button onClick={cart.openCart} variant="ghost">להזמנה שלי</Button>
