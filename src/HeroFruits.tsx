@@ -4,20 +4,16 @@ import { img } from './data';
 
 // The hero's little game: one fruit big in the middle, five others circling it.
 // Tap a circling fruit and it spirals into the middle. Left alone, the middle
-// cycles through the four stars, and the ring around it changes every time.
+// cycles through all of them, and the ring around it changes order every time.
 const pool = [
-  { id: 'pomegranate', name: 'רימון', src: 'hero/pomegranate.webp' },
   { id: 'watermelon', name: 'אבטיח', src: 'hero/watermelon.webp' },
+  { id: 'pineapple', name: 'אננס', src: 'hero/pineapple.webp' },
   { id: 'grapes', name: 'ענבים', src: 'hero/grapes.webp' },
   { id: 'strawberries', name: 'תותים', src: 'hero/strawberries.webp' },
-  { id: 'mango', name: 'מנגו', src: 'hero/mango.webp' },
-  { id: 'kiwi', name: 'קיווי', src: 'hero/kiwi2.webp' },
-  { id: 'fig', name: 'תאנה', src: 'hero/fig2.webp' },
   { id: 'passion', name: 'פסיפלורה', src: 'hero/passion.webp' },
-  { id: 'cherries', name: 'דובדבנים', src: 'hero/cherries.webp' },
-  { id: 'apple', name: 'תפוח', src: 'hero/apple.webp' },
+  { id: 'pomegranate', name: 'רימון', src: 'hero/pomegranate.webp' },
 ];
-const stars = [0, 1, 2, 3];
+const stars = pool.map((_, i) => i);
 const RING = 5;
 const ORBIT = 0.78; // ring radius, as a share of half the stage
 const SMALL = 0.4; // orbit fruit size relative to the middle one
@@ -84,7 +80,7 @@ export function HeroFruits() {
   // One full lap every ~40s
   useAnimationFrame((_, delta) => { if (!reduce) theta.set(theta.get() + delta * 0.00016); });
 
-  // Left alone, the middle cycles through the four stars
+  // Left alone, the middle cycles through every fruit
   useEffect(() => {
     if (reduce) return;
     const t = setInterval(() => {
