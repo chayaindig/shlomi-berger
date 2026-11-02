@@ -74,7 +74,7 @@ export default function App() {
             className="fixed bottom-5 left-5 right-24 z-40 flex items-center justify-between rounded-full bg-gold px-5 py-3.5 font-medium text-night shadow-xl md:left-auto md:right-24 md:w-80"
           >
             <span>{count === 1 ? 'פריט אחד בהזמנה' : `${count} פריטים בהזמנה`}</span>
-            <span>להמשך ←</span>
+            <span className="flex items-center gap-1.5">להמשך <Icon name="arrow" className="size-5" /></span>
           </motion.button>
         )}
       </AnimatePresence>
@@ -128,7 +128,7 @@ function CartDrawer({ open, onClose, cart, setCart }: {
   open: boolean; onClose: () => void; cart: Record<string, number>; setCart: React.Dispatch<React.SetStateAction<Record<string, number>>>;
 }) {
   const [d, setD] = useState({
-    date: '', slot: '', zone: '', name: '', phone: '', toName: '', toPhone: '', address: '', checkAddress: false, greeting: '', notes: '',
+    date: '', slot: '', zone: '', name: '', phone: '', toName: '', toPhone: '', address: '', checkAddress: false, greeting: '', notes: '', apple: '',
   });
   const [error, setError] = useState('');
   const lines = allItems.filter(i => cart[i.id]).map(i => ({ ...i, qty: cart[i.id] }));
@@ -156,6 +156,7 @@ function CartDrawer({ open, onClose, cart, setCart }: {
     if (subtotal < availability.minOrder) return `ההזמנה המינימלית היא ${money(availability.minOrder)}.`;
     if (blocked) return 'בתאריך הזה אין הזמנות, נסו יום אחר.';
     if (!d.date || !d.slot || !d.zone || !d.name || !d.phone) return 'חסרים עוד כמה פרטים כדי שהמגש יגיע בזמן.';
+    if (cart['x-apple'] && !d.apple.trim()) return 'כתבו מה לחרוט על התפוח.';
     if (!pickup && !d.address && !d.checkAddress) return 'כתבו כתובת, או סמנו ששלומי יתאם אותה.';
     return '';
   };
@@ -168,6 +169,7 @@ function CartDrawer({ open, onClose, cart, setCart }: {
     pickup ? null : (d.checkAddress ? 'כתובת: שלומי יתאם עם המקבל' : `כתובת: ${d.address}`),
     `מזמין: ${d.name} · ${d.phone}`,
     d.toName || d.toPhone ? `מקבל: ${d.toName} · ${d.toPhone}` : null,
+    cart['x-apple'] ? `חריטה על התפוח: ${d.apple}` : null,
     d.greeting ? `ברכה: ${d.greeting}` : null,
     d.notes ? `הערות: ${d.notes}` : null,
     '',
@@ -188,7 +190,7 @@ function CartDrawer({ open, onClose, cart, setCart }: {
           >
             <div className="flex items-center justify-between border-b border-ink/10 px-6 py-5">
               <h2 className="text-sub text-ink">ההזמנה שלי</h2>
-              <button onClick={onClose} aria-label="סגירה" className="grid size-10 place-items-center rounded-full border border-ink/15 text-2xl leading-none hover:border-ink/40">×</button>
+              <button onClick={onClose} aria-label="סגירה" className="grid size-10 place-items-center rounded-full border border-ink/15 hover:border-ink/40"><Icon name="close" className="size-6" /></button>
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 py-5">
@@ -209,9 +211,9 @@ function CartDrawer({ open, onClose, cart, setCart }: {
                           <p className="text-note">{l.price === null ? 'מחיר בתיאום' : (l.from ? 'החל מ-' : '') + money(l.price * l.qty)}</p>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <button onClick={() => change(l.id, -1)} aria-label={`הפחתת ${l.name}`} className="grid size-8 place-items-center rounded-full border border-ink/15">−</button>
+                          <button onClick={() => change(l.id, -1)} aria-label={`הפחתת ${l.name}`} className="grid size-8 place-items-center rounded-full border border-ink/15"><Icon name="minus" className="size-5" /></button>
                           <span className="w-5 text-center">{l.qty}</span>
-                          <button onClick={() => change(l.id, 1)} aria-label={`הוספת ${l.name}`} className="grid size-8 place-items-center rounded-full border border-ink/15">+</button>
+                          <button onClick={() => change(l.id, 1)} aria-label={`הוספת ${l.name}`} className="grid size-8 place-items-center rounded-full border border-ink/15"><Icon name="plus" className="size-5" /></button>
                         </div>
                       </li>
                     ))}
@@ -224,15 +226,29 @@ function CartDrawer({ open, onClose, cart, setCart }: {
                       {extras.slice(0, 4).map(x => (
                         <button key={x.id} onClick={() => change(x.id, cart[x.id] ? -cart[x.id] : 1)} aria-pressed={!!cart[x.id]}
                           className={`rounded-2xl border px-3 py-2.5 text-right transition-colors ${cart[x.id] ? 'border-wine bg-wine text-cream' : 'border-ink/15 hover:border-wine'}`}>
-                          <span className="block font-medium leading-tight">{cart[x.id] ? '✓ ' : '+ '}{x.name}</span>
+                          <span className="flex items-center gap-1 font-medium leading-tight"><Icon name={cart[x.id] ? 'check' : 'plus'} className="size-4" />{x.name}</span>
                           <span className={`block text-note ${cart[x.id] ? 'text-cream/80' : 'text-ink-soft'}`}>{x.price === null ? 'מחיר בתיאום' : (x.from ? 'החל מ-' : '') + money(x.price)}</span>
                         </button>
                       ))}
                     </div>
+                    <AnimatePresence initial={false}>
+                      {!!cart['x-apple'] && (
+                        <motion.label
+                          initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                          className="block overflow-hidden"
+                        >
+                          <span className="mt-3 flex items-baseline justify-between text-note text-ink-soft">
+                            <span>מה לחרוט על התפוח?</span>
+                            <span dir="ltr">{d.apple.length}/21</span>
+                          </span>
+                          <input value={d.apple} onChange={set('apple')} maxLength={21} className={`${field} mt-1`} placeholder="למשל: אוהבת אותך" />
+                        </motion.label>
+                      )}
+                    </AnimatePresence>
                     <div className="no-scrollbar -mx-6 mt-2 flex gap-2 overflow-x-auto px-6">
                       {extras.slice(4).filter(x => !cart[x.id]).map(x => (
                         <button key={x.id} onClick={() => change(x.id, 1)} className="whitespace-nowrap rounded-full border border-ink/15 px-3.5 py-2 text-note hover:border-wine">
-                          + {x.name}
+                          <span className="flex items-center gap-1"><Icon name="plus" className="size-4" />{x.name}</span>
                         </button>
                       ))}
                     </div>
@@ -274,7 +290,7 @@ function CartDrawer({ open, onClose, cart, setCart }: {
                     <label><span className="mb-1 block text-note text-ink-soft">הטלפון שלך</span><input type="tel" value={d.phone} onChange={set('phone')} className={field} autoComplete="tel" dir="ltr" /></label>
                     <label><span className="mb-1 block text-note text-ink-soft">שם המקבל</span><input value={d.toName} onChange={set('toName')} className={field} placeholder="אם זו מתנה" /></label>
                     <label><span className="mb-1 block text-note text-ink-soft">טלפון המקבל</span><input type="tel" value={d.toPhone} onChange={set('toPhone')} className={field} dir="ltr" /></label>
-                    <label className="col-span-2"><span className="mb-1 block text-note text-ink-soft">ברכה על המגש (לא חובה)</span><input value={d.greeting} onChange={set('greeting')} className={field} placeholder={cart['x-apple'] ? 'ברכה למגש, ומה לחרוט על התפוח' : 'מזל טוב!'} /></label>
+                    <label className="col-span-2"><span className="mb-1 block text-note text-ink-soft">ברכה על המגש (לא חובה)</span><input value={d.greeting} onChange={set('greeting')} className={field} placeholder="מזל טוב!" /></label>
                     <label className="col-span-2"><span className="mb-1 block text-note text-ink-soft">הערות (לא חובה)</span><input value={d.notes} onChange={set('notes')} className={field} placeholder="אלרגיות, קוד לבניין, בלי קיווי..." /></label>
                   </div>
                 </>

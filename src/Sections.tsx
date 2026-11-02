@@ -1,6 +1,7 @@
 import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from 'motion/react';
 import { useRef, useState } from 'react';
 import { business, categories, eventServices, extras, faq, img, money, products, testimonials, waLink, works, type Category } from './data';
+import { HeroFruits } from './HeroFruits';
 import { Button, Icon, Reveal, ScrollWords, Stroke } from './ui';
 
 type CartApi = { qty: (id: string) => number; add: (id: string) => void; openCart: () => void };
@@ -10,10 +11,7 @@ export function Hero() {
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
-  const scale = useTransform(scrollYProgress, [0, 1], [1, reduce ? 1 : 1.18]);
-  const y = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : 80]);
   const ring = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : 90]);
-  const spin = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : 40]);
 
   return (
     <section ref={ref} id="top" data-bg="#4a0b2c" data-trail="pomegranate" className="pom-skin relative overflow-x-clip pt-24 md:pt-28">
@@ -51,19 +49,10 @@ export function Hero() {
             <span className="absolute -top-1.5 left-1/2 size-3 rounded-full bg-gold" />
           </motion.div>
           <div className="absolute inset-[18%] rounded-full bg-[radial-gradient(circle,rgb(214_60_130/0.28),transparent_68%)]" />
-          <motion.img
-            style={{ scale, y, rotate: spin }}
-            src={img('fruit/pomegranate.webp')}
-            alt="רימון שלם, הפרי שממנו הכול מתחיל"
-            className="absolute inset-[17%] m-auto w-[66%] drop-shadow-[0_30px_40px_rgb(20_0_10/0.55)]"
-          />
-          <Float src="fruit/straw.webp" className="right-[4%] top-[10%] w-[18%]" speed={-60} turn={-14} />
-          <Float src="fruit/kiwi.webp" className="bottom-[10%] left-[0%] w-[22%]" speed={-110} turn={18} />
-          <Float src="fruit/mint.webp" className="left-[8%] top-[6%] w-[15%]" speed={-40} turn={24} />
-          <Float src="fruit/seeds.webp" className="bottom-[2%] right-[22%] w-[16%]" speed={-80} turn={-8} />
-          <div className="absolute bottom-[14%] right-0 rounded-2xl border border-gold/25 bg-night/85 px-4 py-3 text-note shadow-xl md:right-[-2%]">
+          <HeroFruits />
+          <div className="absolute -top-2 right-0 z-10 rounded-2xl border border-gold/25 bg-night/85 px-4 py-3 text-note shadow-xl md:right-[-2%]">
             <span className="block font-display text-sub text-gold">אין שני מגשים זהים</span>
-            <span className="text-mist">כל אחד מעוצב ביד, לפי העונה</span>
+            <span className="text-mist">לחצו על פרי והוא יעבור למרכז</span>
           </div>
         </div>
       </div>
@@ -302,7 +291,7 @@ export function Catalog({ cart }: { cart: CartApi }) {
                         aria-label={`הוספת ${p.name} ${p.size} להזמנה`}
                         className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-wine px-3.5 py-2 text-note font-medium text-cream transition-colors hover:bg-plum"
                       >
-                        להוסיף <span aria-hidden className="text-base leading-none">+</span>
+                        להוסיף <Icon name="plus" className="size-4" />
                       </button>
                     </div>
                   </div>
@@ -334,7 +323,7 @@ export function Catalog({ cart }: { cart: CartApi }) {
                   aria-label={`הוספת ${x.name}`}
                   className="grid size-9 shrink-0 place-items-center rounded-full border border-ink/20 text-lg text-ink transition-colors hover:border-wine hover:bg-wine hover:text-cream"
                 >
-                  {cart.qty(x.id) > 0 ? cart.qty(x.id) : '+'}
+                  {cart.qty(x.id) > 0 ? cart.qty(x.id) : <Icon name="plus" className="size-5" />}
                 </button>
               </li>
             ))}
@@ -436,7 +425,7 @@ export function HowToOrder() {
                   יום חמישי, 12:00<br />רח׳ הנביאים, ירושלים<br />ברכה: "מזל טוב נועה!"
                 </Bubble>
                 <Bubble me show={stage >= 3}>
-                  <span className="text-[#1f7a3d]">✓ שולם</span>
+                  <span className="flex items-center gap-1 text-[#1f7a3d]"><Icon name="check" className="size-4" />שולם</span>
                 </Bubble>
                 <Bubble show={stage >= 4}>קיבלתי! 🍓 מתחיל לעבוד על המגש של נועה</Bubble>
                 <Bubble show={stage >= 5}>
@@ -625,7 +614,7 @@ export function Faq() {
             <details key={f.q} className="group border-t border-ink/15 py-5 last:border-b">
               <summary className="flex items-center justify-between gap-4 font-medium text-ink">
                 {f.q}
-                <span aria-hidden className="text-2xl leading-none text-gold-deep transition-transform duration-300 group-open:rotate-45">+</span>
+                <span aria-hidden className="text-gold-deep transition-transform duration-300 group-open:rotate-45"><Icon name="plus" className="size-6" /></span>
               </summary>
               <p className="mt-3 max-w-xl text-ink-soft">{f.a}</p>
             </details>
