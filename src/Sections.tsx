@@ -225,7 +225,7 @@ export function Catalog({ cart }: { cart: CartApi }) {
   const list = products.filter(p => filter === 'all' || p.category === filter);
 
   return (
-    <section id="catalog" data-bg="#f4ede3" data-trail="mix" className="paper scroll-mt-20 px-5 py-20 text-ink md:px-8 md:py-28">
+    <section id="catalog" data-bg="#f4ede3" className="paper scroll-mt-20 px-5 py-20 text-ink md:px-8 md:py-28">
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
           <div>
