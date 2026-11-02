@@ -114,7 +114,7 @@ function Header({ count, onCart }: { count: number; onCart: () => void }) {
         <div className="flex items-center gap-2">
           <a href="#catalog" className="hidden whitespace-nowrap rounded-full bg-gold px-5 py-2.5 text-note font-medium text-night transition-colors hover:bg-[#e4c487] sm:inline-flex">להזמין מגש</a>
           <button onClick={onCart} aria-label={`ההזמנה שלי, ${count} פריטים`} className="relative grid size-11 place-items-center rounded-full border border-cream/20 text-cream transition-colors hover:border-gold hover:text-gold">
-            <Icon name="bag" />
+            <Icon name="basket" className="size-[1.35rem]" />
             {count > 0 && <span className="absolute -left-1 -top-1 grid size-5 place-items-center rounded-full bg-gold text-[0.7rem] font-medium text-night">{count}</span>}
           </button>
           <a href="#catalog" className="whitespace-nowrap rounded-full bg-gold px-4 py-2.5 text-note font-medium text-night sm:hidden">להזמין</a>
