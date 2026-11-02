@@ -170,7 +170,7 @@ export function FruitStory() {
             <motion.img style={{ opacity: openOpacity, scale: openScale }} src={img('fruit/pomegranate-open.webp')} alt="רימון פתוח עם גרגרים אדומים" 
               className="absolute inset-0 m-auto w-[88%] drop-shadow-[0_30px_40px_rgb(20_0_10/0.55)]" />
             <motion.div style={{ opacity: artOpacity, scale: artScale }} className="absolute inset-[4%] overflow-hidden rounded-full border border-gold/30 [mask-image:radial-gradient(circle,#000_62%,transparent_71%)]">
-              <img src={img('pomegranate-art.webp')} alt="מגש רימונים מעוצב: רימון פתוח כמו פרח במרכז וגרגרים בספירלות (הדמיה)" className="size-full object-cover" loading="lazy" />
+              <img src={img('pomegranate-platter.webp')} alt="מגש פירות בסגנון של שלומי עם רימונים פתוחים במרכז (הדמיה)" className="size-full object-cover" loading="lazy" />
             </motion.div>
 
             <AnimatePresence>

@@ -37,9 +37,9 @@ function CarveSlider() {
       onPointerUp={() => (dragging.current = false)}
       onPointerCancel={() => (dragging.current = false)}
     >
-      <img src={img('carve-after.webp')} alt="אבטיח מגולף של שלומי, ורד ואותיות חרוטות בקליפה" className="absolute inset-0 size-full object-cover" loading="lazy" draggable={false} />
+      <img src={img('carve-roses.webp')} alt="אבטיח מגולף לזר של ורדים (הדמיה)" className="absolute inset-0 size-full object-cover" loading="lazy" draggable={false} />
       <img
-        src={img('carve-before.webp')}
+        src={img('carve-roses-before.webp')}
         alt="אותו אבטיח לפני הגילוף"
         className="absolute inset-0 size-full object-cover"
         style={{ clipPath: `inset(0 0 0 ${pos}%)` }}
@@ -66,9 +66,9 @@ export function Carving({ cart }: { cart: CartApi }) {
       <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-20">
         <div>
           <Eyebrow n="03">גילוף אבטיח</Eyebrow>
-          <h2 className="mt-5 text-section text-cream">אבטיח אחד. <span className="gold-text">שעות של סבלנות.</span></h2>
+          <h2 className="mt-5 text-section text-cream">אבטיח אחד. <span className="gold-text block">זר שלם של ורדים.</span></h2>
           <p className="mt-5 max-w-lg text-mist">
-            ורדים שנפתחים מתוך הקליפה, שם או ברכה חרוטים באותיות, וציור שלם שמחכה במרכז השולחן. גילוף הוא אמנות בפני עצמה, ושלומי עושה אותו ביד, בסכין אחת.
+            מבחוץ זה אבטיח רגיל. אחרי כמה שעות עם סכין אחת, הקליפה הירוקה נפתחת לורדים בלבן ובאדום, עם עלים חרוטים מסביב. גילוף הוא אמנות בפני עצמה, וכל אבטיח כזה הוא מרכז השולחן. אפשר גם שם, ברכה או ציור שתבחרו.
           </p>
           <ol className="mt-8">
             {[['מסמנים', 'את הציור או הברכה על הקליפה'], ['חורטים', 'שכבה אחרי שכבה, מהירוק אל הלבן והאדום'], ['פותחים', 'את הורדים והעלים, עד שהאבטיח נהיה פסל']].map(([t, d], i) => (
