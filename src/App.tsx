@@ -4,7 +4,7 @@ import { business, extras, img, money, products, waLink } from './data';
 import { watchOrphans } from './noOrphans';
 import { watchPageColor } from './pageColor';
 import { About, Catalog, Events, Faq, Footer, FruitStory, Hero, HowToOrder, Testimonials, Ticker, Works } from './Sections';
-import { Icon } from './ui';
+import { FruitTrio, Icon } from './ui';
 import { AppleBlessing, Carving, PlatterWall } from './Craft';
 import { CursorTrail } from './CursorTrail';
 
@@ -43,14 +43,20 @@ export default function App() {
         <FruitStory />
         <Ticker />
         <Works />
+        <FruitTrio n={0} />
         <Carving cart={api} />
+        <FruitTrio n={1} />
         <AppleBlessing cart={api} text={appleText} setText={setAppleText} />
         <PlatterWall cart={api} />
+        <FruitTrio n={2} />
         <Catalog cart={api} />
         <HowToOrder />
+        <FruitTrio n={3} />
         <Events />
+        <FruitTrio n={4} />
         <About />
         <Testimonials />
+        <FruitTrio n={5} />
         <Faq />
       </main>
       <Footer cart={api} />

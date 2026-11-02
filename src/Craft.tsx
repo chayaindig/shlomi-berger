@@ -108,7 +108,6 @@ export function Carving({ cart }: { cart: CartApi }) {
     <section id="carving" data-bg="#33071f" className="pom-skin px-5 py-20 md:px-8 md:py-32">
       <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-20">
         <div>
-          <Eyebrow n="03">גילוף אבטיח</Eyebrow>
           <h2 className="mt-5 text-section text-cream">אבטיח אחד. <span className="gold-text block">זר שלם של ורדים.</span></h2>
           <p className="mt-5 max-w-lg text-mist">
             מבחוץ זה אבטיח רגיל. אחרי כמה שעות עם סכין אחת, הקליפה הירוקה נפתחת לורדים בלבן ובאדום, עם עלים חרוטים מסביב. גילוף הוא אמנות בפני עצמה, וכל אבטיח כזה הוא מרכז השולחן. אפשר גם שם, ברכה או ציור שתבחרו.
@@ -161,7 +160,6 @@ export function AppleBlessing({ cart, text, setText }: { cart: CartApi; text: st
           </div>
         </div>
         <div>
-          <Eyebrow n="04" tone="deep">הטאץ׳ האישי</Eyebrow>
           <h2 className="mt-5 text-section text-ink">ברכה <Stroke>חרוטה על תפוח.</Stroke></h2>
           <p className="mt-5 max-w-lg text-ink-soft">
             הסימן של שלומי: תפוח אדום עם חלון בקליפה, והברכה שלכם חרוטה בתוכו ביד. נגיעה קטנה שהופכת מגש למתנה שזוכרים.
@@ -207,7 +205,6 @@ export function PlatterWall({ cart }: { cart: CartApi }) {
   return (
     <section id="wall" data-bg="#3e0925" data-trail="mix" className="pom-skin relative overflow-x-clip pb-10 pt-20 md:pt-28">
       <div className="relative z-10 mx-auto max-w-3xl px-5 text-center">
-        <Eyebrow n="05">המגשים של שלומי</Eyebrow>
         <h2 className="mt-4 text-section text-cream">קיר שלם <span className="gold-text">של מגשים.</span></h2>
         <p className="mx-auto mt-3 max-w-md text-mist">גררו הצידה כדי לעבור בין המגשים. לחיצה על מגש מהקטלוג מוסיפה אותו להזמנה.</p>
       </div>

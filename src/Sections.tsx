@@ -132,7 +132,6 @@ export function FruitStory() {
         <div className="mx-auto grid w-full max-w-6xl items-center gap-4 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
           {/* Text */}
           <div className="order-2 lg:order-1">
-            <Eyebrow n="01">מפרי ליצירה</Eyebrow>
             <div className="relative mt-4 min-h-[9.5rem] md:min-h-[12rem]" aria-live="polite">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -219,37 +218,12 @@ export function Ticker() {
 /* ───────────── Statement + real works ───────────── */
 export function Works() {
   return (
-    <section id="works" data-bg="#3e0925" className="pom-skin px-5 py-20 md:px-8 md:py-32">
-      <div className="mx-auto max-w-6xl">
-        <Eyebrow n="02">העבודות של שלומי</Eyebrow>
+    <section id="works" data-bg="#3e0925" className="pom-skin px-5 py-16 md:px-8 md:py-24">
+      <div className="mx-auto max-w-5xl text-center">
         <ScrollWords
-          className="mt-8 max-w-4xl font-display text-section text-cream"
+          className="font-display text-section text-cream"
           text="זה לא עוד מגש פירות. כל מגש נבנה מאפס, בשילובי צבעים וגילופים שלא חוזרים על עצמם."
         />
-
-        <div className="mt-16 grid gap-6 md:mt-24 md:grid-cols-12 md:gap-8">
-          {works.map((w, i) => (
-            <Reveal
-              key={w.title}
-              delay={i * 0.08}
-              className={i === 0 ? 'md:col-span-7' : 'md:col-span-5 md:mt-24'}
-            >
-              <figure className="group relative overflow-hidden rounded-[1.75rem] bg-plum">
-                <img
-                  src={w.src}
-                  alt={w.title}
-                  loading="lazy"
-                  className={`w-full object-cover transition-transform duration-[1.4s] ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-105 aspect-[4/5]`}
-                />
-                <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-night via-night/70 to-transparent p-6 pt-20">
-                  <span className="text-note font-medium text-gold">{w.tag}</span>
-                  <h3 className="mt-1 text-sub text-cream">{w.title}</h3>
-                  <p className="mt-1 max-w-md text-note text-mist">{w.text}</p>
-                </figcaption>
-              </figure>
-            </Reveal>
-          ))}
-        </div>
       </div>
     </section>
   );
@@ -265,7 +239,6 @@ export function Catalog({ cart }: { cart: CartApi }) {
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
           <div>
-            <Eyebrow n="06" tone="deep">המגשים</Eyebrow>
             <h2 className="mt-5 text-section text-ink">
               רואים את המגש. <Stroke>רואים את המחיר.</Stroke>
             </h2>
@@ -413,7 +386,6 @@ export function HowToOrder() {
       <div className="sticky top-0 flex min-h-svh items-center px-5 pb-6 pt-20 md:px-8 md:py-20">
         <div className="mx-auto grid w-full max-w-6xl items-center gap-8 lg:grid-cols-[1fr_auto] lg:gap-20">
           <div>
-            <Eyebrow n="07">איך מזמינים</Eyebrow>
             <h2 className="mt-3 text-section text-cream lg:mt-5">שלושה צעדים, <span className="gold-text">וזהו.</span></h2>
             <ol className="mt-8 hidden space-y-1 lg:block">
               {steps.map((s, i) => (
@@ -496,7 +468,6 @@ export function Events() {
       <Float src="fruit/mint.webp" className="-right-4 bottom-16 w-20 md:right-[3%] md:w-28" speed={-110} turn={20} />
       <div className="relative mx-auto grid max-w-6xl gap-12 lg:grid-cols-2 lg:gap-20">
         <div>
-          <Eyebrow n="08">אירועים וחברות</Eyebrow>
           <h2 className="mt-5 text-section text-cream">יש לכם אירוע? <span className="gold-text">נבנה אותו בפירות.</span></h2>
           <p className="mt-5 max-w-lg text-mist">
             מגש אחד גדול, שולחן שלם או עמדה שהאורחים לא עוזבים. ספרו מה האירוע, ושלומי יחזור עם הצעה מסודרת.
@@ -565,7 +536,6 @@ export function About() {
           <img src={img('shlomi.webp')} alt="שלומי ברגר" loading="lazy" className="relative aspect-[4/5] w-full rounded-[2rem] object-cover object-top" />
         </Reveal>
         <div>
-          <Eyebrow n="09" tone="deep">נעים להכיר</Eyebrow>
           <h2 className="mt-5 text-section text-ink">שלומי ברגר</h2>
           <p className="mt-6 max-w-xl font-display text-sub text-ink">
             בשבילי פרי הוא חומר גלם, כמו צבע לצייר. <Stroke>כל מגש מתחיל מדף ריק.</Stroke>
@@ -644,7 +614,6 @@ export function Faq() {
     <section id="faq" data-bg="#ebe1d2" className="scroll-mt-16 px-5 py-20 text-ink md:px-8 md:py-28">
       <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[0.8fr_1.2fr]">
         <div>
-          <Eyebrow n="10" tone="deep">לפני שמזמינים</Eyebrow>
           <h2 className="mt-5 text-section text-ink">שאלות ששואלים</h2>
           <p className="mt-4 max-w-sm text-ink-soft">לא מצאתם? שלומי עונה בוואטסאפ.</p>
           <Button href={waLink('היי שלומי, יש לי שאלה לגבי מגש')} variant="ghost-dark" className="mt-6">
