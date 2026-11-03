@@ -15,7 +15,7 @@ type CartApi = { qty: (id: string) => number; add: (id: string) => void; openCar
 
 const GREEN = '#0d3a22';
 const RED = '#8e1f2d'; // deep flesh, bright red was too loud on a full screen
-const STONE = '#d9d3c2'; // under the stone photo of section 3
+const STONE = '#c2b8a9'; // average of the concrete table texture
 
 const allItems = [...products.map(p => ({ id: p.id, name: p.name })), ...extras.map(x => ({ id: x.id, name: x.name }))];
 const carve = extras.find(x => x.id === 'x-carve')!;
@@ -221,7 +221,7 @@ function ScrollStory({ cart }: { cart: CartApi }) {
   const scale = useTransform(p, [0, 0.3, 0.37, 0.63, 0.7, 1], [1, 1, 1.05, 1.05, 1.1, 1.05]);
   const stripes = useTransform(p, [0, 0.3], [1, 0]);
   const flesh = useTransform(p, [0.27, 0.36, 0.6, 0.69], [0, 1, 1, 0]);
-  const grain = useTransform(p, [0.27, 0.36], [0, 1]);
+  const grain = useTransform(p, [0.27, 0.36, 0.6, 0.69], [0, 1, 1, 0]); // the concrete has its own grain
 
   return (
     <section ref={ref} id="top" aria-label="האבטיח של שלומי, משלם למגולף" className="relative" style={{ height: '330vh' }}>
@@ -229,11 +229,10 @@ function ScrollStory({ cart }: { cart: CartApi }) {
         <motion.div aria-hidden style={{ opacity: stripes }} className="rind absolute inset-0" />
         {/* section 2: a soft glow from the fruit and a dark edge, like light on cut flesh */}
         <motion.div aria-hidden style={{ opacity: flesh }} className="flesh absolute inset-0" />
-        {/* section 3: a real stone table photo */}
-        <motion.div aria-hidden style={{ opacity: ops[2] }} className="absolute inset-0">
-          <img src={img('melon/stone.webp')} alt="" loading="lazy" className="size-full object-cover" />
-          {/* a light veil on the text side so the copy stays easy to read on the stone */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_top,rgb(240_234_220/0.85)_0%,rgb(240_234_220/0.55)_45%,transparent_65%)] md:bg-[linear-gradient(to_left,rgb(240_234_220/0.8)_0%,rgb(240_234_220/0.45)_42%,transparent_62%)]" />
+        {/* section 3: smooth concrete table, the same surface carries on under the shop */}
+        <motion.div aria-hidden style={{ opacity: ops[2] }} className="concrete absolute inset-0">
+          {/* a light veil on the text side so the copy stays easy to read */}
+          <div className="absolute inset-0 [mask-image:linear-gradient(black_82%,transparent)] md:[mask-image:linear-gradient(black_55%,transparent_92%)] bg-[linear-gradient(to_top,rgb(240_234_220/0.85)_0%,rgb(240_234_220/0.55)_45%,transparent_65%)] md:bg-[linear-gradient(to_left,rgb(240_234_220/0.8)_0%,rgb(240_234_220/0.45)_42%,transparent_62%)]" />
         </motion.div>
         <motion.div aria-hidden style={{ opacity: grain }} className="grain absolute inset-0" />
 
@@ -363,7 +362,7 @@ function StaticStory({ cart }: { cart: CartApi }) {
   return (
     <div id="top">
       {stages.map((s, i) => (
-        <section key={i} style={{ backgroundColor: bgs[i] }} className="px-5 pb-16 pt-24 md:px-8">
+        <section key={i} style={{ backgroundColor: bgs[i] }} className={`${i === 2 ? 'concrete ' : ''}px-5 pb-16 pt-24 md:px-8`}>
           <div className="mx-auto grid max-w-7xl items-center gap-8 md:grid-cols-2">
             <div>{s.content(cart)}</div>
             <img src={img(`melon/${i + 1}.webp`)} alt={i === 2 ? 'אבטיח מגולף בצורת ורד, עבודת יד' : ''} className="mx-auto w-[min(80vw,28rem)]" />
@@ -380,7 +379,7 @@ function Shop({ cart }: { cart: CartApi }) {
   const [filter, setFilter] = useState<Category | 'all'>('all');
   const list = products.filter(p => filter === 'all' || p.category === filter);
   return (
-    <section id="shop" className="paper scroll-mt-16 bg-cream px-5 py-20 text-ink md:px-8 md:py-28">
+    <section id="shop" className="concrete scroll-mt-16 px-5 py-20 text-ink md:px-8 md:py-28">
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
           <div>
