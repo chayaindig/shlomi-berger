@@ -337,10 +337,10 @@ function Cut({ id, p, range, d, on, groove, inner, chips, w = 1 }: {
   const op = useTransform(p, [a - 0.02, a, b, b + 0.03], [0, 1, 1, 0]);
   const pathRef = useRef<SVGPathElement>(null);
   const [v, setV] = useState(0);
-  useMotionValueEvent(len, 'change', setV);
+  useMotionValueEvent(len, 'change', x => setV(Number.isFinite(x) ? Math.min(1, Math.max(0, x)) : 0));
   const at = (t: number) => {
     const el = pathRef.current;
-    if (!el) return { x: 0, y: 0 };
+    if (!el || !Number.isFinite(t)) return { x: 0, y: 0 };
     const pt = el.getPointAtLength(el.getTotalLength() * t);
     return { x: pt.x, y: pt.y };
   };
