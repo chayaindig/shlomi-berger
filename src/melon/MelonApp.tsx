@@ -1,7 +1,7 @@
 import { AnimatePresence, motion, useMotionValue, useMotionValueEvent, useReducedMotion, useTransform, type MotionValue } from 'motion/react';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { CartDrawer } from '../App';
-import { categories, extras, img, money, products, waLink, type Category } from '../data';
+import { categories, extras, img, money, products, testimonials, waLink, type Category } from '../data';
 import { watchOrphans } from '../noOrphans';
 import { Icon } from '../ui';
 import film from './film.json';
@@ -47,6 +47,7 @@ export default function MelonApp() {
       <main>
         <MelonStory cart={api} />
         <Shop cart={api} />
+        <Reviews />
         <Events />
       </main>
       <Footer />
@@ -444,6 +445,89 @@ function Shop({ cart }: { cart: CartApi }) {
         <p className="mt-5 text-note text-ink-soft">התמונות בקטלוג להמחשת הצורה והגודל. הפירות משתנים לפי העונה, והעיצוב תמיד ייחודי.</p>
       </div>
     </section>
+  );
+}
+
+/* ───────── What people say: a swipeable carousel, still on the concrete table ───────── */
+
+function Reviews() {
+  const track = useRef<HTMLDivElement>(null);
+  const [at, setAt] = useState(0);
+  // real quotes from data.ts; until they arrive, dashed placeholders hold their place
+  const slots = testimonials.length ? testimonials : Array.from({ length: 5 }, () => ({ quote: '', who: '' }));
+
+  const cards = () => Array.from(track.current?.children ?? []) as HTMLElement[];
+  const go = (dir: 1 | -1) => {
+    const el = track.current, list = cards();
+    if (!el || !list.length) return;
+    const next = Math.min(list.length - 1, Math.max(0, at + dir));
+    // RTL: scrollLeft runs negative, so scroll by the card's own offset
+    el.scrollTo({ left: list[next].offsetLeft - list[0].offsetLeft, behavior: 'smooth' });
+  };
+  const onScroll = () => {
+    const el = track.current, list = cards();
+    if (!el || !list.length) return;
+    const step = list[1] ? Math.abs(list[1].offsetLeft - list[0].offsetLeft) : 1;
+    setAt(Math.min(list.length - 1, Math.round(Math.abs(el.scrollLeft) / step)));
+  };
+
+  return (
+    <section aria-label="המלצות" className="concrete overflow-x-clip px-5 pb-20 md:px-8 md:pb-28">
+      <div className="mx-auto max-w-7xl">
+        <div className="flex items-end justify-between gap-6">
+          <h2 className="text-section text-ink">
+            <span className="block whitespace-nowrap">מה אומרים</span>
+            <span className="block whitespace-nowrap text-gold-deep">אחרי שהמגש נגמר.</span>
+          </h2>
+          <div className="hidden gap-2 md:flex">
+            <button onClick={() => go(-1)} disabled={at === 0} aria-label="ההמלצה הקודמת" className="grid size-12 place-items-center rounded-full border border-ink/30 bg-cream/60 text-ink transition-colors hover:border-ink disabled:opacity-30">
+              <Icon name="arrow" className="size-5 rotate-180" />
+            </button>
+            <button onClick={() => go(1)} disabled={at >= slots.length - 1} aria-label="ההמלצה הבאה" className="grid size-12 place-items-center rounded-full border border-ink/30 bg-cream/60 text-ink transition-colors hover:border-ink disabled:opacity-30">
+              <Icon name="arrow" className="size-5" />
+            </button>
+          </div>
+        </div>
+
+        <div
+          ref={track}
+          onScroll={onScroll}
+          className="no-scrollbar -mx-5 mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-5 pb-2 md:mx-0 md:gap-5 md:px-0"
+        >
+          {slots.map((t, i) =>
+            t.quote ? (
+              <blockquote key={i} className="flex min-h-60 w-[82%] shrink-0 snap-start flex-col justify-between rounded-[2rem] bg-cream p-7 shadow-[0_18px_40px_-24px_rgb(17_48_31/0.45)] sm:w-[60%] md:w-[calc((100%-2.5rem)/3)] md:p-8">
+                <Pips />
+                <p className="mt-4 text-ink">{t.quote}</p>
+                <footer className="mt-6 text-note text-ink-soft">{t.who}</footer>
+              </blockquote>
+            ) : (
+              <div key={i} className="flex min-h-60 w-[82%] shrink-0 snap-start flex-col justify-between rounded-[2rem] border-2 border-dashed border-ink/25 bg-cream/40 p-7 sm:w-[60%] md:w-[calc((100%-2.5rem)/3)] md:p-8">
+                <Pips faint />
+                <p className="text-note text-ink-soft">כאן תיכנס המלצה של לקוח, במילים שלו.</p>
+              </div>
+            ),
+          )}
+        </div>
+
+        {/* where you are: one seed per card */}
+        <div className="mt-6 flex justify-center gap-2" aria-hidden>
+          {slots.map((_, i) => (
+            <span key={i} className={`block h-3 w-2 rounded-[50%_50%_50%_50%/60%_60%_40%_40%] bg-ink transition-all duration-300 ${i === at ? 'scale-125' : 'opacity-25'}`} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** Two watermelon seeds standing in for quotation marks */
+function Pips({ faint = false }: { faint?: boolean }) {
+  return (
+    <span aria-hidden className={`flex gap-1.5 ${faint ? 'opacity-30' : ''}`}>
+      <span className="block h-5 w-3.5 rotate-[-14deg] rounded-[50%_50%_50%_50%/60%_60%_40%_40%] bg-[#1b120f]" />
+      <span className="block h-5 w-3.5 rotate-[-14deg] rounded-[50%_50%_50%_50%/60%_60%_40%_40%] bg-[#1b120f]" />
+    </span>
   );
 }
 
