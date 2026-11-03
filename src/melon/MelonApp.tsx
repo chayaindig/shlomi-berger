@@ -14,8 +14,8 @@ import { Icon } from '../ui';
 type CartApi = { qty: (id: string) => number; add: (id: string) => void; openCart: () => void };
 
 const GREEN = '#0d3a22';
-const RED = '#d42139';
-const CREAM = '#f7f1e3';
+const RED = '#8e1f2d'; // deep flesh, bright red was too loud on a full screen
+const STONE = '#d9d3c2'; // under the stone photo of section 3
 
 const allItems = [...products.map(p => ({ id: p.id, name: p.name })), ...extras.map(x => ({ id: x.id, name: x.name }))];
 const carve = extras.find(x => x.id === 'x-carve')!;
@@ -127,7 +127,7 @@ const stages: Stage[] = [
     stroke: 'rgb(217 234 208 / 0.22)',
     content: () => (
       <>
-        <h1 className="text-hero text-cream">
+        <h1 className="text-hero text-cream md:text-[clamp(3.5rem,6vw,6.25rem)]">
           <span className="block whitespace-nowrap">לא חותכים פירות.</span>
           <span className="block whitespace-nowrap text-gold">מגלפים אותם.</span>
         </h1>
@@ -150,7 +150,7 @@ const stages: Stage[] = [
       <>
         <h2 className="text-section text-cream">
           <span className="block whitespace-nowrap">הכל מתחיל</span>
-          <span className="block whitespace-nowrap text-night">בחיתוך אחד.</span>
+          <span className="block whitespace-nowrap text-[#b9df8f]">בחיתוך אחד.</span>
         </h2>
         <p className="mt-5 max-w-md text-cream/90">
           כל מגש מעוצב ביד ומתאים את עצמו לפירות הכי טובים של העונה. הצורה, הגודל והסגנון נשארים, והצבעים תמיד מפתיעים לטובה.
@@ -164,11 +164,11 @@ const stages: Stage[] = [
     content: cart => (
       <>
         <h2 className="text-section text-ink">
-          <span className="block whitespace-nowrap">ואז הפרי</span>
-          <span className="block whitespace-nowrap text-gold-deep">הופך לברכה.</span>
+          <span className="block whitespace-nowrap">וכשזה מגיע לשולחן,</span>
+          <span className="block whitespace-nowrap text-gold-deep">כולם עוצרים.</span>
         </h2>
-        <p className="mt-5 max-w-md text-ink-soft">
-          ורד מאבטיח, שם חרוט על תפוח, ספר תורה לבר מצווה. גילוף אישי הופך מגש פירות למרכז של השולחן.
+        <p className="mt-5 max-w-md text-ink">
+          בשביל הרגע הזה שלומי מגלף. שם, ברכה או ציור, ביד ובמיוחד בשבילכם. מגש שמצטלמים איתו לפני שמתחילים לאכול.
         </p>
         <div className="mt-7 flex flex-wrap items-center gap-3">
           <a href="#shop" className="inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-gold px-6 py-3.5 font-medium text-night transition-colors hover:bg-[#ff7a86]">
@@ -176,7 +176,7 @@ const stages: Stage[] = [
           </a>
           <button
             onClick={() => cart.add(carve.id)}
-            className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-ink/25 px-5 py-3.5 font-medium text-ink transition-colors hover:border-ink"
+            className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-ink/40 bg-cream/50 px-5 py-3.5 font-medium text-ink transition-colors hover:border-ink"
           >
             אבטיח מגולף, החל מ-{money(carve.price!)} <Icon name="plus" className="size-4" />
           </button>
@@ -211,7 +211,7 @@ function ScrollStory({ cart }: { cart: CartApi }) {
   useMotionValueEvent(p, 'change', v => setStage(v < 0.33 ? 0 : v < 0.66 ? 1 : 2));
 
   // Background follows the fruit: rind green → flesh red → cut-rind cream
-  const bg = useTransform(p, [0, 0.27, 0.36, 0.6, 0.69, 1], [GREEN, GREEN, RED, RED, CREAM, CREAM]);
+  const bg = useTransform(p, [0, 0.27, 0.36, 0.6, 0.69, 1], [GREEN, GREEN, RED, RED, STONE, STONE]);
   const ops = [
     useTransform(p, [0, 0.27, 0.34], [1, 1, 0]),
     useTransform(p, [0.3, 0.37, 0.6, 0.67], [0, 1, 1, 0]),
@@ -220,11 +220,22 @@ function ScrollStory({ cart }: { cart: CartApi }) {
   const rotate = useTransform(p, [0, 1], [-7, 5]);
   const scale = useTransform(p, [0, 0.3, 0.37, 0.63, 0.7, 1], [1, 1, 1.05, 1.05, 1.1, 1.05]);
   const stripes = useTransform(p, [0, 0.3], [1, 0]);
+  const flesh = useTransform(p, [0.27, 0.36, 0.6, 0.69], [0, 1, 1, 0]);
+  const grain = useTransform(p, [0.27, 0.36], [0, 1]);
 
   return (
     <section ref={ref} id="top" aria-label="האבטיח של שלומי, משלם למגולף" className="relative" style={{ height: '330vh' }}>
       <motion.div style={{ backgroundColor: bg }} className="sticky top-0 h-[100svh] overflow-hidden">
         <motion.div aria-hidden style={{ opacity: stripes }} className="rind absolute inset-0" />
+        {/* section 2: a soft glow from the fruit and a dark edge, like light on cut flesh */}
+        <motion.div aria-hidden style={{ opacity: flesh }} className="flesh absolute inset-0" />
+        {/* section 3: a real stone table photo */}
+        <motion.div aria-hidden style={{ opacity: ops[2] }} className="absolute inset-0">
+          <img src={img('melon/stone.webp')} alt="" loading="lazy" className="size-full object-cover" />
+          {/* a light veil on the text side so the copy stays easy to read on the stone */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_top,rgb(240_234_220/0.85)_0%,rgb(240_234_220/0.55)_45%,transparent_65%)] md:bg-[linear-gradient(to_left,rgb(240_234_220/0.8)_0%,rgb(240_234_220/0.45)_42%,transparent_62%)]" />
+        </motion.div>
+        <motion.div aria-hidden style={{ opacity: grain }} className="grain absolute inset-0" />
 
         <div className="relative mx-auto grid h-full max-w-7xl grid-rows-[44%_56%] px-5 pt-16 md:grid-cols-[1.05fr_1fr] md:grid-rows-1 md:gap-8 md:px-8 md:pt-20">
           {/* Text, right side on desktop, bottom on mobile */}
@@ -241,7 +252,7 @@ function ScrollStory({ cart }: { cart: CartApi }) {
                 key={i}
                 aria-hidden
                 style={{ opacity: ops[i], WebkitTextStroke: `1.5px ${s.stroke}` }}
-                className="outline-word pointer-events-none absolute select-none whitespace-nowrap font-display text-[clamp(6rem,26vw,22rem)] leading-none"
+                className="outline-word pointer-events-none absolute select-none whitespace-nowrap font-display text-[clamp(5rem,22vw,12.5rem)] md:text-[clamp(6rem,12vw,13rem)] leading-none"
               >
                 {s.word}
               </motion.span>
@@ -348,7 +359,7 @@ function Seed({ i, p }: { i: number; p: MotionValue<number> }) {
 
 /* Reduced motion: the same three moments, simply one under the other */
 function StaticStory({ cart }: { cart: CartApi }) {
-  const bgs = [GREEN, RED, CREAM];
+  const bgs = [GREEN, RED, STONE];
   return (
     <div id="top">
       {stages.map((s, i) => (
