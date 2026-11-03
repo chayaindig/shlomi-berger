@@ -4,6 +4,7 @@ import { CartDrawer } from '../App';
 import { categories, extras, img, money, products, waLink, type Category } from '../data';
 import { watchOrphans } from '../noOrphans';
 import { Icon } from '../ui';
+import film from './film.json';
 
 /*
   Version B: "the watermelon". One fruit carries the first three screens.
@@ -211,30 +212,24 @@ function ScrollStory({ cart }: { cart: CartApi }) {
   useMotionValueEvent(p, 'change', v => setStage(v < 0.33 ? 0 : v < 0.66 ? 1 : 2));
 
   // Background follows the fruit: rind green → flesh red → cut-rind cream
-  const bg = useTransform(p, [0, 0.27, 0.36, 0.6, 0.69, 1], [GREEN, GREEN, RED, RED, STONE, STONE]);
+  // the page takes its colour from the film's own edge, frame by frame
+  const bg = useTransform(p, v => film.colors[filmFrame(Number.isFinite(v) ? v : 0)] ?? GREEN);
+  // the concrete texture lands as the film reaches the table
+  const table = useTransform(p, [0.7, 0.8], [0, 1]);
   const ops = [
     useTransform(p, [0, 0.27, 0.34], [1, 1, 0]),
     useTransform(p, [0.3, 0.37, 0.6, 0.67], [0, 1, 1, 0]),
     useTransform(p, [0.63, 0.7], [0, 1]),
   ];
-  const rotate = useTransform(p, [0, 1], [-7, 5]);
-  const scale = useTransform(p, [0, 0.3, 0.37, 0.63, 0.7, 1], [1, 1, 1.05, 1.05, 1.1, 1.05]);
-  const stripes = useTransform(p, [0, 0.3], [1, 0]);
-  const flesh = useTransform(p, [0.27, 0.36, 0.6, 0.69], [0, 1, 1, 0]);
-  const grain = useTransform(p, [0.27, 0.36, 0.6, 0.69], [0, 1, 1, 0]); // the concrete has its own grain
 
   return (
     <section ref={ref} id="top" aria-label="האבטיח של שלומי, משלם למגולף" className="relative" style={{ height: '330vh' }}>
       <motion.div style={{ backgroundColor: bg }} className="sticky top-0 h-[100svh] overflow-hidden">
-        <motion.div aria-hidden style={{ opacity: stripes }} className="rind absolute inset-0" />
-        {/* section 2: a soft glow from the fruit and a dark edge, like light on cut flesh */}
-        <motion.div aria-hidden style={{ opacity: flesh }} className="flesh absolute inset-0" />
         {/* section 3: smooth concrete table, the same surface carries on under the shop */}
-        <motion.div aria-hidden style={{ opacity: ops[2] }} className="concrete absolute inset-0">
+        <motion.div aria-hidden style={{ opacity: table }} className="concrete absolute inset-0">
           {/* a light veil on the text side so the copy stays easy to read */}
           <div className="absolute inset-0 [mask-image:linear-gradient(black_82%,transparent)] md:[mask-image:linear-gradient(black_55%,transparent_92%)] bg-[linear-gradient(to_top,rgb(240_234_220/0.85)_0%,rgb(240_234_220/0.55)_45%,transparent_65%)] md:bg-[linear-gradient(to_left,rgb(240_234_220/0.8)_0%,rgb(240_234_220/0.45)_42%,transparent_62%)]" />
         </motion.div>
-        <motion.div aria-hidden style={{ opacity: grain }} className="grain absolute inset-0" />
 
         <div className="relative mx-auto grid h-full max-w-7xl grid-rows-[44%_56%] px-5 pt-16 md:grid-cols-[1.05fr_1fr] md:grid-rows-1 md:gap-8 md:px-8 md:pt-20">
           {/* Text, right side on desktop, bottom on mobile */}
@@ -256,24 +251,9 @@ function ScrollStory({ cart }: { cart: CartApi }) {
                 {s.word}
               </motion.span>
             ))}
-            <motion.div style={{ rotate, scale }} className="relative aspect-square w-[min(74vw,40svh)] md:w-[min(40vw,70svh)]">
-              <div aria-hidden className="absolute inset-x-[14%] bottom-[2%] h-[8%] rounded-[50%] bg-black/35 blur-xl" />
-              {[1, 2, 3].map((n, i) => (
-                <motion.img
-                  key={n}
-                  src={img(`melon/${n}.webp`)}
-                  alt={i === 2 ? 'אבטיח מגולף בצורת ורד, עבודת יד' : ''}
-                  style={{ opacity: ops[i] }}
-                  className="absolute inset-0 size-full object-contain"
-                  {...(i === 0 ? {} : { loading: 'lazy' as const })}
-                />
-              ))}
-              {/* first cut: around the rind, where the top comes off */}
-              <Cut id="c1" p={p} range={[0.22, 0.33]} d="M88.5 32 Q50 52 11.5 32" on={1} groove="#0a2414" inner="#e8505f" chips={['#e8505f', '#2f7a3c', '#f2efe0']} />
-              {/* second cut: the rose, carved into the open flesh */}
-              <Cut id="c2" p={p} range={[0.55, 0.66]} d={ROSE} on={2} groove="#6e0c1b" inner="#ffb0b4" chips={['#e8505f', '#ff8a92', '#c41e37']} w={0.5} />
-              <Seeds p={p} />
-            </motion.div>
+            <div className="relative aspect-square w-[min(84vw,44svh)] md:w-[min(46vw,78svh)]">
+              <MelonFilm p={p} alt={stage === 2 ? 'אבטיח מגולף בצורת ורד, עבודת יד' : 'אבטיח שלם של שלומי'} />
+            </div>
           </div>
         </div>
 
@@ -309,131 +289,63 @@ function Panel({ o, active, children }: { o: MotionValue<number>; active: boolea
   );
 }
 
-/* A rose spiral on the open top of the fruit, seen in perspective (an ellipse), from the rim inwards */
-const ROSE = (() => {
-  const pts: string[] = [];
-  for (let i = 0; i <= 140; i++) {
-    const t = i / 140;
-    const th = t * 2.6 * Math.PI * 2;
-    const r = 0.9 - 0.8 * t;
-    pts.push(`${(50 + 30 * r * Math.cos(th)).toFixed(2)} ${(29.5 + 10 * r * Math.sin(th)).toFixed(2)}`);
+/*
+  The carving as one continuous film, like the product reels: whole → sliced → rose.
+  The frames are pre-rendered files (no canvas), swapped by scroll. The page colour is
+  sampled from each frame's own edge, and the film's edge fades into it, so there is no box.
+*/
+const filmSrc = (i: number) => img(`melon/film/${String(i).padStart(3, '0')}.webp`);
+
+/** scroll progress → frame: hold whole, carve to sliced, hold, carve to rose, hold */
+function filmFrame(v: number) {
+  const last = film.count - 1;
+  const at = [0, 0.14, 0.42, 0.52, 0.8, 1];
+  const fr = [0, 0, film.mid, film.mid, last, last];
+  for (let i = 1; i < at.length; i++) {
+    if (v <= at[i]) return Math.round(fr[i - 1] + ((fr[i] - fr[i - 1]) * (v - at[i - 1])) / (at[i] - at[i - 1]));
   }
-  return `M${pts.join(' L')}`;
-})();
-
-const KNIFE_L = 54; // knife length in fruit units (the fruit box is 100)
-const KNIFE_H = (KNIFE_L * 78) / 900;
-
-/**
- * The knife carving into the fruit: a real groove opens behind the blade (dark cut with
- * the flesh showing inside), everything is masked to the fruit's own silhouette so nothing
- * floats off it, the tip sinks into the fruit, the blade saws a little and drops chips.
- */
-function Cut({ id, p, range, d, on, groove, inner, chips, w = 1 }: {
-  id: string; p: MotionValue<number>; range: [number, number]; d: string; on: number; groove: string; inner: string; chips: string[]; w?: number;
-}) {
-  const [a, b] = range;
-  const len = useTransform(p, [a, b], [0, 1]);
-  const op = useTransform(p, [a - 0.02, a, b, b + 0.03], [0, 1, 1, 0]);
-  const pathRef = useRef<SVGPathElement>(null);
-  const [v, setV] = useState(0);
-  useMotionValueEvent(len, 'change', x => setV(Number.isFinite(x) ? Math.min(1, Math.max(0, x)) : 0));
-  const at = (t: number) => {
-    const el = pathRef.current;
-    if (!el || !Number.isFinite(t)) return { x: 0, y: 0 };
-    const pt = el.getPointAtLength(el.getTotalLength() * t);
-    return { x: pt.x, y: pt.y };
-  };
-  const tip = at(v);
-  const working = v > 0 && v < 1;
-  // the blade saws back and forth along its own axis while it works
-  const saw = working ? Math.sin(v * 70) * 0.9 : 0;
-  const angle = -36 + (working ? Math.sin(v * 23) * 3 : 0);
-  // in from above at the start, out and up at the end
-  const lift = v <= 0 ? -10 : v >= 1 ? -10 : 0;
-  const fruit = img(`melon/${on}.webp`);
-
-  return (
-    <motion.svg aria-hidden viewBox="0 0 100 100" style={{ opacity: op }} className="pointer-events-none absolute inset-0 size-full overflow-visible">
-      <defs>
-        <mask id={`${id}-fruit`} maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100" style={{ maskType: 'alpha' }}>
-          <image href={fruit} x="0" y="0" width="100" height="100" />
-        </mask>
-        {/* the first few percent of the blade fade out, so the tip reads as inside the fruit */}
-        <linearGradient id={`${id}-sink`} x1="0" x2="1" y1="0" y2="0">
-          <stop offset="0" stopColor="#fff" stopOpacity="0" />
-          <stop offset="0.07" stopColor="#fff" stopOpacity="0.25" />
-          <stop offset="0.13" stopColor="#fff" stopOpacity="1" />
-        </linearGradient>
-        <mask id={`${id}-tip`} maskContentUnits="objectBoundingBox">
-          <rect width="1" height="1" fill={`url(#${id}-sink)`} />
-        </mask>
-        <filter id={`${id}-shade`} x="-20%" y="-50%" width="140%" height="200%">
-          <feGaussianBlur stdDeviation="0.9" />
-        </filter>
-      </defs>
-
-      {/* the groove, only where there is fruit */}
-      <g mask={`url(#${id}-fruit)`}>
-        <motion.path d={d} fill="none" stroke={groove} strokeOpacity="0.45" strokeWidth={2.2 * w} strokeLinecap="round" strokeLinejoin="round" style={{ pathLength: len }} />
-        <motion.path ref={pathRef} d={d} fill="none" stroke={groove} strokeWidth={1 * w} strokeLinecap="round" strokeLinejoin="round" style={{ pathLength: len }} />
-        <motion.path d={d} transform={`translate(0 ${0.55 * w})`} fill="none" stroke={inner} strokeWidth={0.55 * w} strokeLinecap="round" strokeLinejoin="round" style={{ pathLength: len }} />
-        {/* the knife's soft shadow falls on the fruit only */}
-        <g transform={`translate(${tip.x + 2.2} ${tip.y + 3 + lift}) rotate(${angle - 4}) translate(${saw} 0)`} opacity={working ? 0.38 : 0}>
-          <rect x="0" y={-KNIFE_H / 2} width={KNIFE_L} height={KNIFE_H} rx={KNIFE_H / 2} fill="#000" filter={`url(#${id}-shade)`} />
-        </g>
-      </g>
-
-      {/* chips of rind and flesh thrown off the tip */}
-      {chips.length > 0 && Array.from({ length: 16 }, (_, n) => {
-        const born = (n + 0.5) / 16;
-        const age = (v - born) * 9;
-        if (age <= 0 || age >= 1) return null;
-        const o = at(born);
-        const dir = n % 2 ? 1 : -1;
-        const x = o.x + dir * (2 + (n % 3) * 1.6) * age;
-        const y = o.y - 5 * age + 12 * age * age;
-        const s = 0.7 + (n % 3) * 0.35;
-        return <ellipse key={n} cx={x} cy={y} rx={s} ry={s * 0.6} transform={`rotate(${n * 47 + age * 200} ${x} ${y})`} fill={chips[n % chips.length]} opacity={1 - age} />;
-      })}
-
-      {/* the knife itself, tip on the cut */}
-      <g
-        transform={`translate(${tip.x} ${tip.y + lift}) rotate(${angle}) translate(${saw} 0)`}
-        style={{ transition: working ? 'none' : 'transform .35s ease' }}
-      >
-        <image
-          href={img('melon/knife.webp')}
-          x="0" y={-KNIFE_H * 0.49} width={KNIFE_L} height={KNIFE_H}
-          mask={`url(#${id}-tip)`}
-          style={{ filter: 'drop-shadow(0 0.4px 0.5px rgb(0 0 0 / .35))' }}
-        />
-      </g>
-    </motion.svg>
-  );
+  return last;
 }
 
-/** Seeds that fly off when the first cut opens the fruit */
-function Seeds({ p }: { p: MotionValue<number> }) {
+function MelonFilm({ p, alt }: { p: MotionValue<number>; alt: string }) {
+  const ref = useRef<HTMLImageElement>(null);
+  const ready = useRef<boolean[]>([true]);
+
+  useEffect(() => {
+    let stop = false;
+    const load = async () => {
+      // a few at a time, in order, so the first cut is ready first
+      for (let i = 1; i < film.count && !stop; i += 6) {
+        await Promise.all(Array.from({ length: Math.min(6, film.count - i) }, async (_, k) => {
+          const im = new Image();
+          await new Promise<void>(done => {
+            im.onload = () => { ready.current[i + k] = true; done(); };
+            im.onerror = () => done(); // keep the nearest frame
+            im.src = filmSrc(i + k);
+          });
+        }));
+      }
+    };
+    // start once the first screen has settled
+    const t = setTimeout(load, 300);
+    return () => { stop = true; clearTimeout(t); };
+  }, []);
+
+  useMotionValueEvent(p, 'change', v => {
+    const el = ref.current;
+    if (!el || !Number.isFinite(v)) return;
+    let i = filmFrame(v);
+    while (i > 0 && !ready.current[i]) i--;
+    const src = filmSrc(i);
+    if (!el.src.endsWith(src)) el.src = src;
+  });
+
   return (
-    <>
-      {Array.from({ length: 9 }, (_, i) => <Seed key={i} i={i} p={p} />)}
-    </>
-  );
-}
-function Seed({ i, p }: { i: number; p: MotionValue<number> }) {
-  const a = (-160 + i * 17) * (Math.PI / 180);
-  const dist = 22 + (i % 3) * 9;
-  const t = useTransform(p, [0.3, 0.42], [0, 1]);
-  const x = useTransform(t, v => `${Math.cos(a) * dist * v}%`);
-  const y = useTransform(t, v => `${Math.sin(a) * dist * v + 30 * v * v}%`);
-  const op = useTransform(t, [0, 0.1, 0.8, 1], [0, 1, 1, 0]);
-  const rotate = useTransform(t, [0, 1], [0, 200 + i * 40]);
-  return (
-    <motion.span
-      aria-hidden
-      style={{ x, y, opacity: op, rotate }}
-      className="absolute left-1/2 top-[30%] block h-[3.2%] w-[2%] rounded-[50%_50%_50%_50%/60%_60%_40%_40%] bg-[#1b120f]"
+    <img
+      ref={ref}
+      src={filmSrc(0)}
+      alt={alt}
+      className="absolute inset-0 size-full object-cover [mask-image:radial-gradient(closest-side,#000_70%,transparent)]"
     />
   );
 }
