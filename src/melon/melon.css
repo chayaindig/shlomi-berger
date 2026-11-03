@@ -1,0 +1,28 @@
+/* Version B: watermelon. Same tokens, re-pointed, so shared parts (the order drawer) follow along.
+   Green rind is the base, red flesh is the one touch (all calls to action), cream is the cut rind. */
+html.melon {
+  --color-night: #0b2e1b;
+  --color-plum: #11402a;
+  --color-wine: #c41e37;
+  --color-gold: #ff5d6c;
+  --color-gold-deep: #b3172f;
+  --color-cream: #f7f1e3;
+  --color-sand: #ece5d2;
+  --color-ink: #11301f;
+  --color-ink-soft: #4d6455;
+  --color-mist: #d9ead0;
+  --page-bg: #0d3a22;
+}
+html.melon ::selection { background: var(--color-gold); color: var(--color-night); }
+
+/* Rind stripes: the watermelon skin as a quiet pattern on the green */
+.rind {
+  background-image:
+    radial-gradient(ellipse 70% 50% at 80% 10%, rgb(166 210 122 / 0.12), transparent 70%),
+    repeating-linear-gradient(100deg, transparent 0 46px, rgb(0 0 0 / 0.14) 46px 60px, transparent 60px 110px);
+}
+
+/* Giant outlined word behind the fruit */
+.outline-word {
+  color: transparent; /* stroke color comes inline, per stage */
+}

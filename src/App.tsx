@@ -124,7 +124,7 @@ function Header({ count, onCart }: { count: number; onCart: () => void }) {
   );
 }
 
-function CartDrawer({ open, onClose, cart, setCart }: {
+export function CartDrawer({ open, onClose, cart, setCart }: {
   open: boolean; onClose: () => void; cart: Record<string, number>; setCart: React.Dispatch<React.SetStateAction<Record<string, number>>>;
 }) {
   const [d, setD] = useState({
