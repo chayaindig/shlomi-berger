@@ -268,8 +268,10 @@ function ScrollStory({ cart }: { cart: CartApi }) {
                   {...(i === 0 ? {} : { loading: 'lazy' as const })}
                 />
               ))}
-              <Cut p={p} range={[0.23, 0.33]} d="M98 33 Q50 27 2 33" />
-              <Cut p={p} range={[0.56, 0.66]} d="M95 42 L88 33 L81 42 L74 33 L67 42 L60 33 L53 42 L46 33 L39 42 L32 33 L25 42 L18 33 L11 42 L4 33" />
+              {/* first cut: around the rind, where the top comes off */}
+              <Cut id="c1" p={p} range={[0.22, 0.33]} d="M88.5 32 Q50 52 11.5 32" on={1} groove="#0a2414" inner="#e8505f" chips={['#e8505f', '#2f7a3c', '#f2efe0']} />
+              {/* second cut: the rose, carved into the open flesh */}
+              <Cut id="c2" p={p} range={[0.55, 0.66]} d={ROSE} on={2} groove="#6e0c1b" inner="#ffb0b4" chips={['#e8505f', '#ff8a92', '#c41e37']} w={0.5} />
               <Seeds p={p} />
             </motion.div>
           </div>
@@ -307,25 +309,105 @@ function Panel({ o, active, children }: { o: MotionValue<number>; active: boolea
   );
 }
 
-/** A knife line drawn across the fruit, right to left, with a small blade riding its tip */
-function Cut({ p, range, d }: { p: MotionValue<number>; range: [number, number]; d: string }) {
+/* A rose spiral on the open top of the fruit, seen in perspective (an ellipse), from the rim inwards */
+const ROSE = (() => {
+  const pts: string[] = [];
+  for (let i = 0; i <= 140; i++) {
+    const t = i / 140;
+    const th = t * 2.6 * Math.PI * 2;
+    const r = 0.9 - 0.8 * t;
+    pts.push(`${(50 + 30 * r * Math.cos(th)).toFixed(2)} ${(29.5 + 10 * r * Math.sin(th)).toFixed(2)}`);
+  }
+  return `M${pts.join(' L')}`;
+})();
+
+const KNIFE_L = 54; // knife length in fruit units (the fruit box is 100)
+const KNIFE_H = (KNIFE_L * 78) / 900;
+
+/**
+ * The knife carving into the fruit: a real groove opens behind the blade (dark cut with
+ * the flesh showing inside), everything is masked to the fruit's own silhouette so nothing
+ * floats off it, the tip sinks into the fruit, the blade saws a little and drops chips.
+ */
+function Cut({ id, p, range, d, on, groove, inner, chips, w = 1 }: {
+  id: string; p: MotionValue<number>; range: [number, number]; d: string; on: number; groove: string; inner: string; chips: string[]; w?: number;
+}) {
   const [a, b] = range;
   const len = useTransform(p, [a, b], [0, 1]);
-  const op = useTransform(p, [a - 0.01, a + 0.01, b, b + 0.05], [0, 1, 1, 0]);
+  const op = useTransform(p, [a - 0.02, a, b, b + 0.03], [0, 1, 1, 0]);
   const pathRef = useRef<SVGPathElement>(null);
-  const [tip, setTip] = useState({ x: 98, y: 33 });
-  useMotionValueEvent(len, 'change', v => {
-    const el = pathRef.current; if (!el) return;
-    const pt = el.getPointAtLength(el.getTotalLength() * v);
-    setTip({ x: pt.x, y: pt.y });
-  });
+  const [v, setV] = useState(0);
+  useMotionValueEvent(len, 'change', setV);
+  const at = (t: number) => {
+    const el = pathRef.current;
+    if (!el) return { x: 0, y: 0 };
+    const pt = el.getPointAtLength(el.getTotalLength() * t);
+    return { x: pt.x, y: pt.y };
+  };
+  const tip = at(v);
+  const working = v > 0 && v < 1;
+  // the blade saws back and forth along its own axis while it works
+  const saw = working ? Math.sin(v * 70) * 0.9 : 0;
+  const angle = -36 + (working ? Math.sin(v * 23) * 3 : 0);
+  // in from above at the start, out and up at the end
+  const lift = v <= 0 ? -10 : v >= 1 ? -10 : 0;
+  const fruit = img(`melon/${on}.webp`);
+
   return (
     <motion.svg aria-hidden viewBox="0 0 100 100" style={{ opacity: op }} className="pointer-events-none absolute inset-0 size-full overflow-visible">
-      <motion.path ref={pathRef} d={d} fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" opacity="0.35" style={{ pathLength: len }} />
-      <motion.path d={d} fill="none" stroke="#fffaf0" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round" style={{ pathLength: len }} />
-      <g transform={`translate(${tip.x} ${tip.y}) rotate(-35)`}>
-        <path d="M0 0 L-2.6 -15 L1.6 -15 Z" fill="#e9edf2" stroke="#9aa1ab" strokeWidth="0.3" />
-        <rect x="-2.4" y="-25" width="3.6" height="10" rx="1.6" fill="#1e5c30" />
+      <defs>
+        <mask id={`${id}-fruit`} maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100" style={{ maskType: 'alpha' }}>
+          <image href={fruit} x="0" y="0" width="100" height="100" />
+        </mask>
+        {/* the first few percent of the blade fade out, so the tip reads as inside the fruit */}
+        <linearGradient id={`${id}-sink`} x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" stopColor="#fff" stopOpacity="0" />
+          <stop offset="0.07" stopColor="#fff" stopOpacity="0.25" />
+          <stop offset="0.13" stopColor="#fff" stopOpacity="1" />
+        </linearGradient>
+        <mask id={`${id}-tip`} maskContentUnits="objectBoundingBox">
+          <rect width="1" height="1" fill={`url(#${id}-sink)`} />
+        </mask>
+        <filter id={`${id}-shade`} x="-20%" y="-50%" width="140%" height="200%">
+          <feGaussianBlur stdDeviation="0.9" />
+        </filter>
+      </defs>
+
+      {/* the groove, only where there is fruit */}
+      <g mask={`url(#${id}-fruit)`}>
+        <motion.path d={d} fill="none" stroke={groove} strokeOpacity="0.45" strokeWidth={2.2 * w} strokeLinecap="round" strokeLinejoin="round" style={{ pathLength: len }} />
+        <motion.path ref={pathRef} d={d} fill="none" stroke={groove} strokeWidth={1 * w} strokeLinecap="round" strokeLinejoin="round" style={{ pathLength: len }} />
+        <motion.path d={d} transform={`translate(0 ${0.55 * w})`} fill="none" stroke={inner} strokeWidth={0.55 * w} strokeLinecap="round" strokeLinejoin="round" style={{ pathLength: len }} />
+        {/* the knife's soft shadow falls on the fruit only */}
+        <g transform={`translate(${tip.x + 2.2} ${tip.y + 3 + lift}) rotate(${angle - 4}) translate(${saw} 0)`} opacity={working ? 0.38 : 0}>
+          <rect x="0" y={-KNIFE_H / 2} width={KNIFE_L} height={KNIFE_H} rx={KNIFE_H / 2} fill="#000" filter={`url(#${id}-shade)`} />
+        </g>
+      </g>
+
+      {/* chips of rind and flesh thrown off the tip */}
+      {chips.length > 0 && Array.from({ length: 16 }, (_, n) => {
+        const born = (n + 0.5) / 16;
+        const age = (v - born) * 9;
+        if (age <= 0 || age >= 1) return null;
+        const o = at(born);
+        const dir = n % 2 ? 1 : -1;
+        const x = o.x + dir * (2 + (n % 3) * 1.6) * age;
+        const y = o.y - 5 * age + 12 * age * age;
+        const s = 0.7 + (n % 3) * 0.35;
+        return <ellipse key={n} cx={x} cy={y} rx={s} ry={s * 0.6} transform={`rotate(${n * 47 + age * 200} ${x} ${y})`} fill={chips[n % chips.length]} opacity={1 - age} />;
+      })}
+
+      {/* the knife itself, tip on the cut */}
+      <g
+        transform={`translate(${tip.x} ${tip.y + lift}) rotate(${angle}) translate(${saw} 0)`}
+        style={{ transition: working ? 'none' : 'transform .35s ease' }}
+      >
+        <image
+          href={img('melon/knife.webp')}
+          x="0" y={-KNIFE_H * 0.49} width={KNIFE_L} height={KNIFE_H}
+          mask={`url(#${id}-tip)`}
+          style={{ filter: 'drop-shadow(0 0.4px 0.5px rgb(0 0 0 / .35))' }}
+        />
       </g>
     </motion.svg>
   );
