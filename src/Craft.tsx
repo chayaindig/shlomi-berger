@@ -145,7 +145,7 @@ const apples = [
   { src: 'heart', alt: 'תפוח חרוט עם לב וברכה לאחות' },
 ];
 
-function AppleCarousel() {
+export function AppleCarousel() {
   const reduce = useReducedMotion();
   const [active, setActive] = useState(0);
   const [hold, setHold] = useState(false);

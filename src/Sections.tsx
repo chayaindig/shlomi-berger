@@ -336,7 +336,7 @@ export function Catalog({ cart }: { cart: CartApi }) {
 }
 
 /* ───────────── How to order: a WhatsApp chat that builds itself ───────────── */
-const steps = [
+export const steps = [
   { title: 'בוחרים מגש', text: 'רואים תמונה ומחיר, ומוסיפים להזמנה בלחיצה.' },
   { title: 'יום, שעה וברכה', text: 'טופס קצר אחד. בלי לחפור, רק מה שצריך כדי שהמגש יגיע בזמן.' },
   { title: 'משלמים ומקבלים אישור', text: 'ההזמנה מגיעה לשלומי מסודרת, ואתם מקבלים אישור בוואטסאפ.' },
