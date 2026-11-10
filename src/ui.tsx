@@ -4,7 +4,7 @@ import { useRef, type ReactNode } from 'react';
 const icon = (name: string) => `${import.meta.env.BASE_URL}icons/${name}.svg`;
 
 export function Icon({ name, className = 'size-5' }: { name: string; className?: string }) {
-  // Magnific icons are single-color SVGs, tinted through CSS mask so they follow currentColor
+  // Monochrome SVG assets follow the surrounding text color.
   return (
     <span
       aria-hidden

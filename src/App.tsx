@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useMemo, useState } from 'react';
-import { availability, extras, img, money, products, waLink, zones } from './data';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { deliveryStatus, israelDate, type CalendarEvent } from './delivery';
+import { availability, business, extras, img, money, products, waLink, zones } from './data';
 import { watchOrphans } from './noOrphans';
 import { watchPageColor } from './pageColor';
 import { About, Catalog, Events, Faq, Footer, FruitStory, Hero, HowToOrder, Testimonials, Ticker, Works } from './Sections';
@@ -128,9 +129,41 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
   open: boolean; onClose: () => void; cart: Record<string, number>; setCart: React.Dispatch<React.SetStateAction<Record<string, number>>>;
 }) {
   const [d, setD] = useState({
-    date: '', slot: '', zone: '', name: '', phone: '', toName: '', toPhone: '', address: '', checkAddress: false, greeting: '', notes: '', apple: '',
+    date: '', slot: '', zone: '', name: '', email: '', phone: '', toName: '', toPhone: '', address: '', checkAddress: false, greeting: '', notes: '', apple: '',
   });
   const [error, setError] = useState('');
+  const [review, setReview] = useState(false);
+  const reviewRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
+  useEffect(() => { if (review) { reviewRef.current?.scrollIntoView({ block: "center", behavior: "smooth" }); reviewRef.current?.focus({ preventScroll: true }); } }, [review]);
+  const [calendar, setCalendar] = useState<CalendarEvent[] | null>(null);
+  const [calendarError, setCalendarError] = useState(false);
+  const [calendarRetry, setCalendarRetry] = useState(0);
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    if (!open) return;
+    setNow(new Date());
+    const timer = window.setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, [open]);
+  const today = israelDate(now);
+  const lastDate = new Date(today + 'T12:00:00Z'); lastDate.setUTCDate(lastDate.getUTCDate() + 90);
+  const maxDate = lastDate.toISOString().slice(0, 10);
+  useEffect(() => {
+    if (!open) return;
+    const controller = new AbortController();
+    let cancelled = false;
+    setCalendar(null); setCalendarError(false);
+    const timeout = window.setTimeout(() => controller.abort(), 12000);
+    fetch(`https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&c=on&i=on&geo=geoname&geonameid=281184&b=40&lg=he&start=${today}&end=${maxDate}`, { signal: controller.signal })
+      .then(r => { if (!r.ok) throw new Error('Calendar'); return r.json(); })
+      .then(data => { if (!Array.isArray(data.items)) throw new Error('Calendar'); if (!cancelled) setCalendar(data.items); })
+      .catch(() => { if (!cancelled) setCalendarError(true); })
+      .finally(() => clearTimeout(timeout));
+    return () => { cancelled = true; clearTimeout(timeout); controller.abort(); };
+  }, [open, today, maxDate, calendarRetry]);
+  const delivery = deliveryStatus(d.date, calendar, availability.blockedDates, now);
+  useEffect(() => { setReview(false); setError(''); }, [d, cart]);
   const lines = allItems.filter(i => cart[i.id]).map(i => ({ ...i, qty: cart[i.id] }));
   const zone = zones.find(z => z.id === d.zone);
   const pickup = d.zone === 'pickup';
@@ -143,8 +176,7 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
   });
   const set = (k: keyof typeof d) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setD(v => ({ ...v, [k]: e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value }));
-  const tomorrow = new Date(Date.now() + 864e5).toISOString().slice(0, 10);
-  const blocked = availability.blockedDates.includes(d.date);
+
 
   useEffect(() => {
     const esc = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -154,20 +186,26 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
   const validate = () => {
     if (!lines.some(l => l.tray)) return 'בחרו לפחות מגש אחד.';
     if (subtotal < availability.minOrder) return `ההזמנה המינימלית היא ${money(availability.minOrder)}.`;
-    if (blocked) return 'בתאריך הזה אין הזמנות, נסו יום אחר.';
-    if (!d.date || !d.slot || !d.zone || !d.name || !d.phone) return 'חסרים עוד כמה פרטים כדי שהמגש יגיע בזמן.';
+    const current = deliveryStatus(d.date, calendar, availability.blockedDates);
+    if (current.error) return current.error;
+    if (d.date > maxDate) return 'אפשר להזמין עד 90 יום מראש.';
+    if (!d.date || !delivery.slot || !d.zone || !d.name.trim() || !d.phone.trim()) return 'חסרים עוד כמה פרטים כדי שהמגש יגיע בזמן.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email.trim())) return 'כתבו כתובת מייל תקינה לאישור ולמסמך התשלום.';
+    if (!/^0[2-9]\d{7,8}$/.test(d.phone.replace(/[\s-]/g, ''))) return 'בדקו שמספר הטלפון כולל קידומת ומספר מלא.';
+    if (!pickup && (!d.toName.trim() || !/^0[2-9]\d{7,8}$/.test(d.toPhone.replace(/[\s-]/g, '')))) return 'למשלוח צריך שם ומספר טלפון תקין של המקבל.';
     if (cart['x-apple'] && !d.apple.trim()) return 'כתבו מה לחרוט על התפוח.';
-    if (!pickup && !d.address && !d.checkAddress) return 'כתבו כתובת, או סמנו ששלומי יתאם אותה.';
+    if (!pickup && !d.address.trim() && !d.checkAddress) return 'כתבו כתובת, או סמנו ששלומי יתאם אותה.';
     return '';
   };
   const message = () => [
     'הזמנה חדשה מהאתר 🍉',
     ...lines.map(l => `${l.qty} × ${l.name} (${l.detail})${l.price ? ' · ' + money(l.price * l.qty) : ''}`),
     '',
-    `תאריך: ${d.date.split('-').reverse().join('/')} · ${d.slot}`,
+    `תאריך: ${d.date.split('-').reverse().join('/')} · ${delivery.slot}`,
     pickup ? 'איסוף עצמי' : `משלוח: ${zone?.label}${zone?.price ? ' · ' + money(zone.price) : ''}`,
     pickup ? null : (d.checkAddress ? 'כתובת: שלומי יתאם עם המקבל' : `כתובת: ${d.address}`),
     `מזמין: ${d.name} · ${d.phone}`,
+    `מייל: ${d.email}`,
     d.toName || d.toPhone ? `מקבל: ${d.toName} · ${d.toPhone}` : null,
     cart['x-apple'] ? `חריטה על התפוח: ${d.apple}` : null,
     d.greeting ? `ברכה: ${d.greeting}` : null,
@@ -175,7 +213,8 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
     '',
     `סה״כ: ${money(total)}${hasCustom ? ' + פריטים בתיאום' : ''}`,
   ].filter(x => typeof x === 'string').join('\n');
-  const sendWa = () => { const e = validate(); setError(e); if (!e) window.open(waLink(message()), '_blank'); };
+  const sendWa = () => { const e = validate(); setError(e || (business.whatsapp === '972500000000' ? 'מספר הוואטסאפ של שלומי טרם הוגדר. ההזמנה לא נשלחה.' : '')); if (!e && business.whatsapp !== '972500000000') window.open(waLink(message()), '_blank', 'noopener,noreferrer'); };
+  const previewOrder = () => { const e = validate(); setError(e); setReview(!e); };
   const field = 'w-full rounded-xl border border-ink/15 bg-white/70 px-3.5 py-2.5 text-ink focus:border-wine focus:outline-none';
 
   return (
@@ -184,9 +223,9 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
         <>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 z-[55] bg-night/70" />
           <motion.aside
-            role="dialog" aria-modal="true" aria-label="ההזמנה שלי"
+            ref={dialogRef} tabIndex={-1} onKeyDown={e => { if (e.key !== "Tab") return; const nodes = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), [tabindex="0"]') || []).filter(n => n.getClientRects().length); const first = nodes[0], last = nodes[nodes.length - 1]; if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); } }} role="dialog" aria-modal="true" aria-label="ההזמנה שלי"
             initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'tween', duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-y-0 right-0 z-[56] flex w-full max-w-md flex-col bg-cream text-ink"
+            className="order-panel fixed inset-y-0 right-0 z-[56] flex w-full max-w-xl flex-col bg-cream text-ink"
           >
             <div className="flex items-center justify-between border-b border-ink/10 px-6 py-5">
               <h2 className="text-sub text-ink">ההזמנה שלי</h2>
@@ -197,10 +236,11 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
               {lines.length === 0 ? (
                 <div className="py-16 text-center">
                   <p className="font-display text-sub">עוד לא בחרתם מגש</p>
-                  <a href="#catalog" onClick={onClose} className="mt-4 inline-block rounded-full bg-wine px-6 py-3 text-cream">לבחירת מגש</a>
+                  <a href={location.pathname.includes("combo") ? "#shop" : "#catalog"} onClick={onClose} className="mt-4 inline-block rounded-full bg-wine px-6 py-3 text-cream">לבחירת מגש</a>
                 </div>
               ) : (
                 <>
+                  <p className="mb-4 text-note text-ink-soft">המגש והתוספות</p>
                   <ul className="space-y-3">
                     {lines.map(l => (
                       <li key={l.id} className="flex items-center gap-3 rounded-2xl bg-white/60 p-2.5">
@@ -254,18 +294,11 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
                     </div>
                   </div>
 
-                  <div className="mt-7 grid grid-cols-2 gap-3">
-                    <p className="col-span-2 font-display text-sub">מתי?</p>
-                    <label><span className="mb-1 block text-note text-ink-soft">תאריך</span><input type="date" min={tomorrow} value={d.date} onChange={set('date')} className={field} /></label>
-                    <label><span className="mb-1 block text-note text-ink-soft">שעות</span>
-                      <select value={d.slot} onChange={set('slot')} className={field}>
-                        <option value="">בחירה</option>
-                        {availability.timeSlots.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                    </label>
-                    {blocked && <p className="col-span-2 text-note font-medium text-wine">בתאריך הזה אין הזמנות, נסו יום אחר.</p>}
+                {review && <div ref={reviewRef} tabIndex={-1} role="status" className="mt-3 max-h-44 overflow-auto rounded-2xl bg-sand p-4 text-note"><strong>הפרטים מוכנים לבדיקה</strong><p>{d.name} · {d.email}</p><p>{d.date.split('-').reverse().join('/')} · {delivery.slot}</p><p>{pickup ? 'איסוף עצמי' : `${d.toName} · ${d.checkAddress ? 'כתובת בתיאום' : d.address}`}</p>{hasCustom && <p className="mt-2 font-medium">הסכום אינו סופי: פריטים בהתאמה אישית דורשים הצעת מחיר.</p>}<p className="mt-2">זו תצוגה מקדימה. ההזמנה לא נשמרה ולא בוצע חיוב.</p></div>}
 
-                    <p className="col-span-2 mt-3 font-display text-sub">איך זה מגיע?</p>
+                  <div className="order-step grid grid-cols-2 gap-3">
+                    <p className="col-span-2 text-note text-ink-soft">לאן ומתי?</p>
+                    <p className="col-span-2 font-display text-sub">בוחרים אזור אספקה</p>
                     <div className="col-span-2 grid grid-cols-2 gap-2">
                       {zones.map(z => (
                         <label key={z.id} className={`cursor-pointer rounded-2xl border px-3 py-2.5 transition-colors ${d.zone === z.id ? 'border-wine bg-wine text-cream' : 'border-ink/15 hover:border-wine'} ${z.id === 'other' ? 'col-span-2' : ''}`}>
@@ -285,9 +318,17 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
                       </>
                     )}
 
-                    <p className="col-span-2 mt-3 font-display text-sub">מי מזמין ומי מקבל?</p>
+                    <label className="col-span-2 mt-3"><span className="mb-1 block font-medium">באיזה יום לשמח אותם?</span><input type="date" min={today} max={maxDate} value={d.date} onInput={e => { const date = e.currentTarget.value; setD(v => ({ ...v, date })); }} onChange={set('date')} disabled={!d.zone} className={`${field} disabled:opacity-40`} /><span className="mt-1 block text-note text-ink-soft">{!d.zone ? 'בחרו קודם אזור או איסוף עצמי.' : 'עד 12:00 אפשר להזמין להיום, בכפוף לזמינות.'}</span></label>
+                    <div className="col-span-2 rounded-2xl bg-sand p-4 text-note" aria-live="polite">
+                      {calendarError ? <><p>לוח החגים לא נטען. לא ניתן לאשר מועד עד שהבדיקה תושלם.</p><button className="mt-2 underline" onClick={() => setCalendarRetry(v => v + 1)}>לנסות שוב</button></> : d.date ? <p className={delivery.error ? 'text-gold-deep' : 'font-medium'}>{delivery.error || `זמן האספקה: ${delivery.slot}`}</p> : <p>בימי חול: הזמנה עד 12:00 לאספקה בתוך 4–6 שעות. להזמנה מראש: 09:00–16:00.</p>}
+                      <p className="mt-2 text-ink-soft">לשישי מזמינים עד חמישי ב־12:00. האספקה מסתיימת שלוש שעות לפני כניסת שבת. בשבת ובחג אנחנו סגורים. ערבי חג בתיאום מראש.</p>
+                      <a href="https://www.hebcal.com" target="_blank" rel="noreferrer" className="mt-2 inline-block text-ink-soft underline">זמני שבת וחג: Hebcal · ירושלים</a>
+                    </div>
+                    <p className="col-span-2 order-step text-note text-ink-soft">פרטים וברכה אישית</p>
+                    <p className="col-span-2 font-display text-sub">מי מזמין ומי מקבל?</p>
                     <label><span className="mb-1 block text-note text-ink-soft">השם שלך</span><input value={d.name} onChange={set('name')} className={field} autoComplete="name" /></label>
                     <label><span className="mb-1 block text-note text-ink-soft">הטלפון שלך</span><input type="tel" value={d.phone} onChange={set('phone')} className={field} autoComplete="tel" dir="ltr" /></label>
+                    <label className="col-span-2"><span className="mb-1 block text-note text-ink-soft">המייל שלך לאישור ולמסמך התשלום</span><input type="email" value={d.email} onChange={set('email')} className={field} autoComplete="email" dir="ltr" placeholder="name@example.com" /></label>
                     <label><span className="mb-1 block text-note text-ink-soft">שם המקבל</span><input value={d.toName} onChange={set('toName')} className={field} placeholder="אם זו מתנה" /></label>
                     <label><span className="mb-1 block text-note text-ink-soft">טלפון המקבל</span><input type="tel" value={d.toPhone} onChange={set('toPhone')} className={field} dir="ltr" /></label>
                     <label className="col-span-2"><span className="mb-1 block text-note text-ink-soft">ברכה על המגש (לא חובה)</span><input value={d.greeting} onChange={set('greeting')} className={field} placeholder="מזל טוב!" /></label>
@@ -305,12 +346,13 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
                 </div>
                 <p className="text-note text-ink-soft">{zone ? (pickup ? 'איסוף עצמי, בלי עלות' : zone.price === null ? 'המשלוח יתואם מול שלומי' : `כולל משלוח ל${zone.label}`) : 'המשלוח מתווסף לפי האזור'}</p>
                 {error && <p role="alert" className="mt-2 text-note font-medium text-wine">{error}</p>}
+                <button onClick={previewOrder} className="mt-3 w-full rounded-full bg-gold py-3 font-medium text-night">בדיקת פרטים וסיכום הזמנה</button>
                 {/* TODO: Grow (Meshulam) checkout, Shlomi already has an account. Bit and PayBox can go through Grow too. */}
                 <button disabled title="הסליקה תחובר בקרוב" className="mt-4 w-full cursor-not-allowed rounded-full bg-wine/40 py-3.5 font-medium text-cream">
-                  לתשלום באשראי או ביט · בקרוב
+                  התשלום באתר עדיין לא פעיל
                 </button>
                 <button onClick={sendWa} className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-wine py-3.5 font-medium text-cream transition-colors hover:bg-plum">
-                  <Icon name="whatsapp" /> לשלוח את ההזמנה בוואטסאפ
+                  <Icon name="whatsapp" /> לתיאום ההזמנה עם שלומי
                 </button>
               </div>
             )}

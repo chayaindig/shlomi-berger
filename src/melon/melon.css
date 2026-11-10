@@ -48,3 +48,35 @@ html.melon ::selection { background: var(--color-gold); color: var(--color-night
   background-size: 900px auto;
   background-repeat: repeat;
 }
+
+/* Each column owns its space: fruit can no longer paint over the headline. */
+.combo-hero-grid { grid-template-rows: 43% 57%; gap: 0; }
+.combo-copy { min-width: 0; z-index: 2; container-type: inline-size; }
+.combo-title { font-size: clamp(2.6rem, 10.5cqw, 5.8rem); line-height: 1.04; }
+.combo-copy .text-section { font-size: clamp(2.2rem, 9cqw, 4.5rem); line-height: 1.05; }
+/* minmax(0, 1fr): the frame is bigger than its cell on purpose (transparent margins), so it must overflow evenly and stay centred */
+.combo-fruit { min-width: 0; isolation: isolate; grid-template-rows: minmax(0, 1fr); }
+.combo-fruit-frame { width: min(100vw, 45svh); max-width: none; }
+.combo-fruit .outline-word { display: none; }
+.combo-copy p { line-height: 1.6; }
+@media (min-width: 768px) {
+  /* minmax(0, 1fr): on a short laptop the big frame must not stretch the row and push the fruit off the bottom */
+  .combo-hero-grid { grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr); grid-template-rows: minmax(0, 1fr); gap: 3rem; }
+  .combo-fruit-frame { width: min(145%, calc((100svh - 5rem) * 1.22)); max-width: none; }
+}
+@media (max-width: 767px) and (max-height: 740px) {
+  .combo-hero-grid { grid-template-rows: 35% 65%; }
+  .combo-fruit-frame { width: 41svh; }
+  .combo-copy p { margin-top: .75rem; font-size: 16px; }
+  .combo-copy p + div { margin-top: 1rem; }
+}
+.order-panel { color-scheme: light; }
+.order-panel input, .order-panel select { min-width: 0; }
+.order-panel button:disabled { cursor: not-allowed; }
+.order-step { border-top: 1px solid rgb(17 48 31 / .12); padding-top: 1.25rem; margin-top: 1.25rem; }
+
+.combo-fruit-frame { pointer-events: none; }
+.single-apple-stage { overflow: hidden; }
+@media (max-width: 767px) { .single-apple .apple-nav { padding-inline: .85rem; } }
+
+#apple { scroll-margin-top: 100px; }

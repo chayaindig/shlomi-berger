@@ -6,7 +6,7 @@ import { watchOrphans } from '../noOrphans';
 import { Icon } from '../ui';
 import film from '../melon/film.json';
 import { AppleCarousel } from '../Craft';
-import { steps } from '../Sections';
+const steps = [{ title: 'בוחרים את המגש', text: 'גודל, צורה וכמה אנשים תרצו לשמח. כל המחירים כאן, ליד התמונות.' }, { title: 'מוסיפים משהו אישי', text: 'ברכה, תפוח חרוט או משהו מתוק ליד. בוחרים אזור ותאריך אספקה.' }, { title: 'בודקים את הפרטים', text: 'רואים את המגש, התוספות והמשלוח בסיכום אחד, לפני אישור ההזמנה.' }];
 
 /*
   Version C: the two versions combined, on the watermelon palette.
@@ -53,10 +53,10 @@ export default function ComboApp() {
   const [toast, setToast] = useState('');
 
   useEffect(() => watchOrphans(), []);
-  // on a phone, the first screen already has the header button and the price button
+  // on a phone the story's buttons sit where the floating WhatsApp would, so it waits until the story ends
   const [atTop, setAtTop] = useState(true);
   useEffect(() => {
-    const on = () => setAtTop(window.scrollY < window.innerHeight * 0.35);
+    const on = () => setAtTop(window.scrollY < (document.getElementById('top')?.offsetHeight ?? 0) - window.innerHeight * 0.7);
     on(); window.addEventListener('scroll', on, { passive: true });
     return () => window.removeEventListener('scroll', on);
   }, []);
@@ -82,7 +82,7 @@ export default function ComboApp() {
         <Shop cart={api} />
         <Apple cart={api} />
         <HowTo />
-        <Reviews />
+        {testimonials.length > 0 && <Reviews />}
         <Events />
         <Faq />
       </main>
@@ -167,12 +167,12 @@ const stages: Stage[] = [
     stroke: 'rgb(217 234 208 / 0.22)',
     content: () => (
       <>
-        <h1 className="text-hero text-cream md:text-[clamp(3.5rem,6vw,6.25rem)]">
+        <h1 className="combo-title text-cream">
           <span className="block whitespace-nowrap">לא חותכים פירות.</span>
           <span className="block whitespace-nowrap text-gold">מגלפים אותם.</span>
         </h1>
         <p className="mt-5 max-w-md text-cream/85">
-          מגשי פירות מעוצבים בעבודת יד של שלומי ברגר, עם גילופים שלא קונים מהמדף. משלוח בירושלים, גבעת זאב ומודיעין, החל מ-285 ₪.
+          מגשי פירות וגילופים בעבודת יד של שלומי ברגר. למתנה אישית, לשולחן החג ולרגע שרוצים לחגוג. בוחרים מגש, מוסיפים ברכה ומשמחים מישהו.
         </p>
         <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
           <EntryButton />
@@ -269,16 +269,16 @@ function ScrollStory({ cart }: { cart: CartApi }) {
           <div className="absolute inset-0 [mask-image:linear-gradient(black_82%,transparent)] md:[mask-image:linear-gradient(black_55%,transparent_92%)] bg-[linear-gradient(to_top,rgb(240_234_220/0.85)_0%,rgb(240_234_220/0.55)_45%,transparent_65%)] md:bg-[linear-gradient(to_left,rgb(240_234_220/0.8)_0%,rgb(240_234_220/0.45)_42%,transparent_62%)]" />
         </motion.div>
 
-        <div className="relative mx-auto grid h-full max-w-7xl grid-rows-[44%_56%] px-5 pt-16 md:grid-cols-[1.05fr_1fr] md:grid-rows-1 md:gap-8 md:px-8 md:pt-20">
+        <div className="combo-hero-grid relative mx-auto grid h-full max-w-7xl px-5 pt-16 md:px-8 md:pt-20">
           {/* Text, right side on desktop, bottom on mobile */}
-          <div className="relative order-2 md:order-1">
+          <div className="combo-copy relative order-2 md:order-1">
             {stages.map((s, i) => (
               <Panel key={i} o={ops[i]} active={stage === i}>{s.content(cart)}</Panel>
             ))}
           </div>
 
           {/* The fruit */}
-          <div className="relative order-1 grid place-items-center md:order-2">
+          <div className="combo-fruit relative order-1 grid place-items-center md:order-2">
             {stages.map((s, i) => (
               <motion.span
                 key={i}
@@ -289,7 +289,7 @@ function ScrollStory({ cart }: { cart: CartApi }) {
                 {s.word}
               </motion.span>
             ))}
-            <div className="relative aspect-square w-[min(84vw,44svh)] md:w-[min(46vw,78svh)]">
+            <div className="combo-fruit-frame relative aspect-square">
               <MelonFilm p={p} alt={stage === 2 ? 'אבטיח מגולף בצורת ורד, עבודת יד' : 'אבטיח שלם של שלומי'} />
             </div>
           </div>
@@ -383,7 +383,7 @@ function MelonFilm({ p, alt }: { p: MotionValue<number>; alt: string }) {
       ref={ref}
       src={filmSrc(0)}
       alt={alt}
-      className="absolute inset-0 size-full object-cover [mask-image:radial-gradient(closest-side,#000_70%,transparent)]"
+      className="absolute inset-0 size-full object-cover [mask-image:radial-gradient(closest-side,#000_80%,transparent)]"
     />
   );
 }
@@ -433,7 +433,7 @@ function Shop({ cart }: { cart: CartApi }) {
         <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
           <div>
             <h2 className="text-section text-ink">בוחרים מגש. <span className="text-gold-deep">רואים מחיר.</span></h2>
-            <p className="mt-4 max-w-xl text-ink-soft">כל מגש עם התמונה, הגודל, כמה אנשים הוא מספיק והמחיר שלו. מוסיפים להזמנה, ושלומי מאשר לפני ההכנה.</p>
+            <p className="mt-4 max-w-xl text-ink-soft">מתנה קטנה או שולחן מלא? בחרו לפי מספר הסועדים, הגודל והתקציב. את הברכה והתוספות נוסיף בשלב הבא.</p>
           </div>
           <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 md:mx-0 md:px-0" role="tablist" aria-label="סינון מגשים">
             {categories.map(c => (
@@ -651,8 +651,7 @@ function HowTo() {
       <div aria-hidden className="grain absolute inset-0" />
       <div className="relative mx-auto max-w-6xl">
         <h2 className="text-section text-cream">
-          <span className="block whitespace-nowrap">שלושה צעדים,</span>
-          <span className="block whitespace-nowrap text-[#b9df8f]">וזהו.</span>
+          <span>מהמגש שבחרתם<br />עד החיוך שלהם.</span>
         </h2>
         <ol className="mt-10 grid gap-4 md:grid-cols-3 md:gap-5">
           {steps.map((st, i) => (

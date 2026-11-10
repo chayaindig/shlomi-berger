@@ -18,7 +18,7 @@ function useReadyNear(ref: RefObject<Element | null>) {
   }, [loaded]);
   return near && loaded;
 }
-import { Button, Reveal, Stroke } from './ui';
+import { Button, Icon, Reveal, Stroke } from './ui';
 
 type CartApi = { qty: (id: string) => number; add: (id: string) => void; openCart: () => void };
 
@@ -136,70 +136,34 @@ export function Carving({ cart }: { cart: CartApi }) {
   );
 }
 
-/* ───────────── Personal touch: Shlomi's real engraved apples, turning on their own ───────────── */
+/* Shlomi's photographed carvings: one apple, manual navigation, no timer. */
 const apples = [
-  { src: 'love', alt: 'תפוח חרוט: אוהבת אותך' },
-  { src: '13', alt: 'תפוח חרוט: מזל טוב 13' },
-  { src: 'girl', alt: "תפוח חרוט: It's a girl" },
-  { src: 'book', alt: 'תפוח חרוט עם לוחות הברית וברכה' },
-  { src: 'heart', alt: 'תפוח חרוט עם לב וברכה לאחות' },
+  { src: 'gift', alt: 'תפוח עם מתנה מגולפת, עבודה של שלומי', caption: 'מתנה קטנה, מחשבה גדולה' },
+  { src: 'birthday', alt: 'תפוח חרוט Happy Birthday, עבודה של שלומי', caption: 'יום הולדת עם ברכה אישית' },
+  { src: 'balloons', alt: 'תפוח עם בלונים מגולפים, עבודה של שלומי', caption: 'סיבה קטנה לחגיגה' },
+  { src: 'mazal', alt: 'תפוח חרוט מזל טוב, עבודה של שלומי', caption: 'שתי מילים שאומרות הכול' },
+  { src: 'stroller', alt: 'תפוח עם עגלת תינוק מגולפת, עבודה של שלומי', caption: 'לכבוד מישהו חדש במשפחה' },
+  { src: 'baby2', alt: 'תפוח עם תינוק מגולף, עבודה של שלומי', caption: 'ברוכים הבאים לעולם' },
 ];
 
 export function AppleCarousel() {
-  const reduce = useReducedMotion();
   const [active, setActive] = useState(0);
-  const [hold, setHold] = useState(false);
-  useEffect(() => {
-    if (reduce || hold) return;
-    const t = setInterval(() => setActive(a => (a + 1) % apples.length), 2600);
-    return () => clearInterval(t);
-  }, [reduce, hold]);
-
+  const start = useRef<{ x: number; y: number } | null>(null);
+  const move = (direction: number) => setActive(a => (a + direction + apples.length) % apples.length);
+  const apple = apples[active];
   return (
-    <div
-      className="relative mx-auto aspect-[5/4] w-full max-w-[34rem]"
-      onMouseEnter={() => setHold(true)}
-      onMouseLeave={() => setHold(false)}
-      aria-roledescription="carousel"
-      aria-label="תפוחים שחרט שלומי"
-    >
-      {apples.map((a, i) => {
-        // offset in the ring: 0 is centre, -1/1 the neighbours, the rest wait behind
-        let d = i - active;
-        if (d > apples.length / 2) d -= apples.length;
-        if (d < -apples.length / 2) d += apples.length;
-        const far = Math.abs(d) > 1;
-        return (
-          <motion.img
-            key={a.src}
-            src={img(`apples/${a.src}.webp`)}
-            alt={d === 0 ? a.alt : ''}
-            aria-hidden={d !== 0}
-            loading="lazy"
-            onClick={() => setActive(i)}
-            initial={false}
-            animate={{
-              x: `${-d * 62}%`,
-              scale: d === 0 ? 1 : 0.58,
-              rotate: d === 0 ? 0 : d * -8,
-              opacity: far ? 0 : d === 0 ? 1 : 0.55,
-              zIndex: d === 0 ? 3 : far ? 1 : 2,
-            }}
-            transition={{ type: 'spring', stiffness: 120, damping: 18 }}
-            className={`absolute inset-0 m-auto h-[88%] w-auto cursor-pointer object-contain drop-shadow-[0_28px_30px_rgb(42_20_36/0.35)] ${far ? 'pointer-events-none' : ''}`}
-          />
-        );
-      })}
-      <div className="absolute inset-x-0 -bottom-6 flex justify-center gap-2">
-        {apples.map((a, i) => (
-          <button
-            key={a.src}
-            onClick={() => setActive(i)}
-            aria-label={`תפוח ${i + 1}`}
-            className={`h-1.5 rounded-full transition-all duration-300 ${i === active ? 'w-6 bg-wine' : 'w-1.5 bg-ink/25'}`}
-          />
-        ))}
+    <div className="single-apple mx-auto w-full min-w-0 max-w-[34rem]" role="region" aria-roledescription="carousel" aria-label="תפוחים שחרט שלומי">
+      <div className="single-apple-stage relative flex aspect-square items-center justify-center touch-pan-y select-none"
+        onTouchStart={e => { start.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }}
+        onTouchEnd={e => { const point = start.current; start.current = null; if (!point) return; const dx = e.changedTouches[0].clientX - point.x; const dy = e.changedTouches[0].clientY - point.y; if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) move(dx > 0 ? 1 : -1); }}>
+        <img key={apple.src} src={img(`apples/${apple.src}.webp`)} alt={apple.alt} loading="lazy" draggable={false} className="h-[86%] w-[86%] object-contain drop-shadow-[0_22px_18px_rgb(42_20_36/0.18)]" />
       </div>
+      <div className="flex items-center justify-between gap-3 border-t border-ink/15 pt-5">
+        <button type="button" aria-label="התפוח הקודם" onClick={() => move(-1)} className="apple-nav grid size-12 shrink-0 place-items-center rounded-full border border-ink/25 text-ink hover:bg-cream"><Icon name="arrow" className="size-6 rotate-180" /></button>
+        <div className="min-w-0 text-center" aria-live="polite" aria-atomic="true"><p dir="ltr" className="text-note text-ink-soft">{active + 1} / {apples.length}</p><p className="text-note text-ink">{apple.caption}</p></div>
+        <button type="button" aria-label="התפוח הבא" onClick={() => move(1)} className="apple-nav grid size-12 shrink-0 place-items-center rounded-full border border-ink/25 text-ink hover:bg-cream"><Icon name="arrow" className="size-6" /></button>
+      </div>
+      <p className="mt-3 text-center text-note text-ink-soft">גילופים אמיתיים של שלומי · אפשר לדפדף גם בהחלקה</p>
     </div>
   );
 }
