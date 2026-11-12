@@ -2,12 +2,14 @@
 
 @font-face { font-family: "Pompei"; src: url("/fonts/PompeiNarrow_FS-Bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
 @font-face { font-family: "Pompei"; src: url("/fonts/PompeiNarrow_FS-Extralight.woff2") format("woff2"); font-weight: 200; font-display: swap; }
+@font-face { font-family: "Shalehet"; src: url("/fonts/LiaShalehet-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
 @font-face { font-family: "Polin"; src: url("/fonts/Polin-Extralight.woff2") format("woff2"); font-weight: 200; font-display: swap; }
 @font-face { font-family: "Polin"; src: url("/fonts/Polin-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
 @font-face { font-family: "Polin"; src: url("/fonts/Polin-Medium.woff2") format("woff2"); font-weight: 500; font-display: swap; }
 
 @theme {
   --font-sans: "Polin", "Assistant", system-ui, sans-serif;
+  --font-script: "Shalehet", "Pompei", serif;
   --font-display: "Pompei", "Polin", system-ui, sans-serif;
 
   /* Palette from the logo: plum night, pomegranate wine, gold leaf, paper cream */
@@ -131,8 +133,28 @@ body {
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .25 0 0 0 0 .2 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+/* Same pomegranate grain, in stone gray: the trays section in D. Keeps the texture continuous so only the color moves */
+.pom-skin.pom-gray::before { background-image: url("/img/pom-skin-gray.webp"); opacity: 0.55; }
+.pom-skin.pom-gray::after {
+  background:
+    radial-gradient(ellipse 55% 40% at 82% 18%, rgb(255 255 255 / 0.22), transparent 70%),
+    radial-gradient(ellipse 50% 45% at 10% 85%, rgb(60 50 45 / 0.16), transparent 70%);
+}
+
+/* Smooth concrete table (seamless tile), shared by C (combo) and D */
+.concrete {
+  background-color: #c2b8a9;
+  background-image: url("/img/melon/concrete.webp");
+  background-size: 900px auto;
+  background-repeat: repeat;
+}
+
 .ticker { animation: ticker 38s linear infinite; }
 @keyframes ticker { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+
+/* Fruit pieces drifting around the hero melon */
+.bob { animation: bob var(--bob, 6s) ease-in-out infinite alternate; }
+@keyframes bob { from { transform: translateY(-6%) rotate(-4deg); } to { transform: translateY(6%) rotate(5deg); } }
 
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -142,7 +164,7 @@ details > summary::-webkit-details-marker { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .ticker, .gold-text { animation: none; }
+  .ticker, .gold-text, .bob { animation: none; }
   .stroke { transition: none; background-size: 100% 2px; }
 }
 

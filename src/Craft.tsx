@@ -1,5 +1,6 @@
 import { animate, motion, useInView, useReducedMotion } from 'motion/react';
 import { lazy, Suspense, useEffect, useRef, useState, type RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import { img, money, products, works } from './data';
 
 // three.js effects (React Bits Pro) load only after the page has loaded and the section is near,
@@ -192,22 +193,54 @@ export function AppleBlessing({ cart }: { cart: CartApi }) {
 }
 
 /* ───────────── Shlomi's platters on a curved wall (React Bits Pro: Concave Carousel) ───────────── */
-export function PlatterWall({ cart }: { cart: CartApi }) {
+// Shlomi's own photos for version D's portfolio wall (no add-to-cart there). More to come from him.
+// Works wall order (12.11): strongest, most varied pieces first, alternating big trays,
+// a tower, a bouquet and a close-up, so every swipe shows something different.
+// The new-* photos sit on the same butcher-block table (background replaced in Magnific).
+const wallWorks = [
+  { src: 'new-wedding', title: 'מגש לחתונה' },
+  { src: 'real-platter', title: 'מגש בר מצווה', root: true },
+  { src: 'new-tower', title: 'מגש קומות עם שם מגולף' },
+  { src: 'new-name-tray', title: 'מגש עם שם מגולף' },
+  { src: 'real-bouquet', title: 'זר פירות על מגש', root: true },
+  { src: 'new-pineapple', title: 'מגש חגיגי עם אננס' },
+  { src: 'new-rose-melon', title: 'אבטיח ורדים' },
+  { src: 'event-table', title: 'שולחן פירות לאירוע' },
+  { src: 'new-nuts', title: 'מגש פירות ופיצוחים' },
+  { src: 'tray-girl', title: 'It\'s a girl' },
+  { src: 'new-mazal-tov', title: 'מגש מזל טוב' },
+  { src: 'tray-boat-2', title: 'מגש סירה עם גילופים' },
+  { src: 'new-long', title: 'מגש ארוך לאירוע' },
+  { src: 'tray-mango', title: 'מגש עם שם חרוט' },
+  { src: 'tray-birthday', title: 'מגש ליום הולדת' },
+  { src: 'tray-apples', title: 'מגש לכבוד לידה' },
+  { src: 'tray-boat', title: 'מגש סירה' },
+];
+
+
+export function PlatterWall({ cart, worksOnly = false }: { cart: CartApi; worksOnly?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const ready = useReadyNear(ref);
   const reduce = useReducedMotion();
   const trays = products.filter((_, i) => i % 2 === 0 || i > 17).slice(0, 10);
-  const items = [
+  const items = worksOnly ? [
+    ...wallWorks.map(w => ({ src: img(w.root ? `${w.src}.webp` : `works/${w.src}.webp`), alt: `${w.title}, עבודה של שלומי`, title: w.title, subtitle: 'עבודה של שלומי' })),
+  ] : [
     ...works.map(w => ({ src: w.src, alt: w.title, title: w.title, subtitle: 'עבודה של שלומי' })),
     ...trays.map(p => ({ src: img(`catalog/${p.id}.webp`), alt: `מגש ${p.name} ${p.size}`, title: p.name, subtitle: `${p.size} · ${money(p.price)}` })),
   ];
-  const ids = [...works.map(() => ''), ...trays.map(p => p.id)];
+  const ids = worksOnly ? [] : [...works.map(() => ''), ...trays.map(p => p.id)];
 
   return (
     <section id="wall" data-bg="#3e0925" data-trail="mix" className="pom-skin relative overflow-x-clip pb-10 pt-20 md:pt-28">
       <div className="relative z-10 mx-auto max-w-3xl px-5 text-center">
-        <h2 className="mt-4 text-section text-cream">קיר שלם <span className="gold-text">של מגשים.</span></h2>
-        <p className="mx-auto mt-3 max-w-md text-mist">גררו הצידה כדי לעבור בין המגשים. לחיצה על מגש מהקטלוג מוסיפה אותו להזמנה.</p>
+        {worksOnly ? <>
+          <h2 className="mt-4 text-section text-cream">מהעבודות <span className="gold-text">של שלומי.</span></h2>
+          <p className="mx-auto mt-3 max-w-md text-mist">גררו הצידה כדי לעבור בין העבודות.</p>
+        </> : <>
+          <h2 className="mt-4 text-section text-cream">קיר שלם <span className="gold-text">של מגשים.</span></h2>
+          <p className="mx-auto mt-3 max-w-md text-mist">גררו הצידה כדי לעבור בין המגשים. לחיצה על מגש מהקטלוג מוסיפה אותו להזמנה.</p>
+        </>}
       </div>
       <div ref={ref} className="relative mt-6 h-[min(70vh,34rem)] min-h-[420px]">
         {ready ? (
@@ -223,7 +256,7 @@ export function PlatterWall({ cart }: { cart: CartApi }) {
               controls
               backgroundColor="transparent"
               className="!h-full text-cream"
-              ariaLabel="קיר מגשים מעוקל. גררו או השתמשו בחצים כדי לעבור בין המגשים."
+              ariaLabel={worksOnly ? 'קיר עבודות מעוקל. גררו או השתמשו בחצים כדי לעבור בין העבודות.' : 'קיר מגשים מעוקל. גררו או השתמשו בחצים כדי לעבור בין המגשים.'}
               onSelect={(_, i) => ids[i] && cart.add(ids[i])}
             />
           </Suspense>
@@ -234,5 +267,39 @@ export function PlatterWall({ cart }: { cart: CartApi }) {
         )}
       </div>
     </section>
+  );
+}
+
+/* Cart's "what does a carved apple look like" window: tap the apple to see the next one. */
+const appleSamples = ['gift', 'birthday', 'love', 'mazal', 'balloons', 'heart', 'stroller', 'baby2', 'girl', 'book', '13'];
+
+export function AppleSimulator({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [active, setActive] = useState(0);
+  const close = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    close.current?.focus();
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); onClose(); } };
+    window.addEventListener('keydown', key, true);
+    return () => window.removeEventListener('keydown', key, true);
+  }, [open, onClose]);
+  if (!open) return null;
+  const next = () => setActive(a => (a + 1) % appleSamples.length);
+  return createPortal(
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-night/80 p-5" onClick={onClose}>
+      <div role="dialog" aria-modal="true" aria-label="דוגמאות לתפוחים מגולפים" onClick={e => e.stopPropagation()}
+        className="relative w-full max-w-md rounded-3xl bg-cream p-6 text-center text-ink shadow-2xl">
+        <button ref={close} type="button" onClick={onClose} aria-label="סגירה" className="absolute left-4 top-4 grid size-10 place-items-center rounded-full border border-ink/20 hover:bg-cream">
+          <Icon name="close" className="size-5" />
+        </button>
+        <p className="font-display text-sub">תפוחים שחרט שלומי</p>
+        <button type="button" onClick={next} aria-label="לתפוח הבא" className="mx-auto mt-3 block aspect-square w-full max-w-[19rem] cursor-pointer">
+          <img key={active} src={img(`apples/${appleSamples[active]}.webp`)} alt="תפוח מגולף, עבודה של שלומי" draggable={false}
+            className="size-full object-contain drop-shadow-[0_22px_18px_rgb(42_20_36/0.18)] transition-transform duration-300 hover:scale-105" />
+        </button>
+        <p className="mt-2 text-note text-ink-soft" aria-live="polite">לחצו על התפוח כדי לראות עוד · <span dir="ltr">{active + 1} / {appleSamples.length}</span></p>
+      </div>
+    </div>,
+    document.body,
   );
 }

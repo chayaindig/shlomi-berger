@@ -5,7 +5,8 @@ import { img } from './data';
 // The hero's little game: one fruit big in the middle, five others circling it.
 // Tap a circling fruit and it spirals into the middle. Left alone, the middle
 // cycles through all of them, and the ring around it changes order every time.
-const pool = [
+type HeroItem = { id: string; name: string; src: string };
+const fruitPool: HeroItem[] = [
   { id: 'watermelon', name: 'אבטיח', src: 'hero/watermelon.webp' },
   { id: 'pineapple', name: 'אננס', src: 'hero/pineapple-half.webp' },
   { id: 'grapes', name: 'ענבים', src: 'hero/grapes.webp' },
@@ -13,19 +14,27 @@ const pool = [
   { id: 'passion', name: 'פסיפלורה', src: 'hero/passion.webp' },
   { id: 'pomegranate', name: 'רימון', src: 'hero/pomegranate.webp' },
 ];
-const stars = pool.map((_, i) => i);
+// Version D: six carved watermelons on the same carousel. Generated stand-ins until Shlomi's own photos arrive.
+export const melonPool: HeroItem[] = [
+  { id: 'heart', name: 'לב ורדים לחתונה', src: 'hero/melons/heart.webp' },
+  { id: 'roses', name: 'ורדים וברכה', src: 'hero/melons/roses.webp' },
+  { id: 'crown', name: 'כתר וברכה', src: 'hero/melons/crown.webp' },
+  { id: 'rose', name: 'ורד גדול', src: 'hero/melons/rose.webp' },
+  { id: 'jerusalem', name: 'ירושלים בגילוף', src: 'hero/melons/bni.webp' },
+  { id: 'birthday', name: 'יום הולדת שמח', src: 'hero/melons/birthday.webp' },
+];
 const RING = 5;
 const ORBIT = 0.78; // ring radius, as a share of half the stage
 const SMALL = 0.4; // orbit fruit size relative to the middle one
 
-function ringFor(center: number, turn: number) {
+function ringFor(pool: HeroItem[], center: number, turn: number) {
   const others = pool.map((_, i) => i).filter(i => i !== center);
   const start = (turn * 2) % others.length;
   return [...others.slice(start), ...others.slice(0, start)].slice(0, RING);
 }
 
-function Fruit({ i, role, slot, theta, half, onPick }: {
-  i: number; role: 'center' | 'ring' | 'off'; slot: number; theta: MotionValue<number>; half: number; onPick: (i: number) => void;
+function Fruit({ f, i, role, slot, theta, half, onPick }: {
+  f: HeroItem; i: number; role: 'center' | 'ring' | 'off'; slot: number; theta: MotionValue<number>; half: number; onPick: (i: number) => void;
 }) {
   const r = useMotionValue(role === 'center' ? 0 : ORBIT);
   const phase = useMotionValue((slot / RING) * Math.PI * 2);
@@ -46,7 +55,6 @@ function Fruit({ i, role, slot, theta, half, onPick }: {
     }
   }, [role, slot, r, scale, phase]);
 
-  const f = pool[i];
   return (
     <motion.button
       type="button"
@@ -62,7 +70,7 @@ function Fruit({ i, role, slot, theta, half, onPick }: {
   );
 }
 
-export function HeroFruits() {
+export function HeroFruits({ pool = fruitPool }: { pool?: HeroItem[] }) {
   const reduce = useReducedMotion();
   const stage = useRef<HTMLDivElement>(null);
   const [half, setHalf] = useState(260);
@@ -85,13 +93,13 @@ export function HeroFruits() {
     if (reduce) return;
     const t = setInterval(() => {
       if (Date.now() - touched.current < 9000) return;
-      setCenter(c => stars[(stars.indexOf(c) + 1) % stars.length] ?? 0);
+      setCenter(c => (c + 1) % pool.length);
       setTurn(n => n + 1);
     }, 4200);
     return () => clearInterval(t);
-  }, [reduce]);
+  }, [reduce, pool.length]);
 
-  const ring = ringFor(center, turn);
+  const ring = ringFor(pool, center, turn);
   const pick = (i: number) => { touched.current = Date.now(); setCenter(i); setTurn(n => n + 1); };
 
   return (
@@ -99,7 +107,7 @@ export function HeroFruits() {
       {pool.map((_, i) => {
         const slot = ring.indexOf(i);
         const role = i === center ? 'center' : slot >= 0 ? 'ring' : 'off';
-        return <Fruit key={i} i={i} role={role} slot={Math.max(slot, 0)} theta={theta} half={half} onPick={pick} />;
+        return <Fruit key={i} f={pool[i]} i={i} role={role} slot={Math.max(slot, 0)} theta={theta} half={half} onPick={pick} />;
       })}
       <p aria-live="polite" className="pointer-events-none absolute inset-x-0 -bottom-[6%] text-center font-display text-sub text-gold">
         {pool[center].name}

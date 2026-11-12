@@ -1,14 +1,14 @@
 import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from 'motion/react';
 import { useRef, useState } from 'react';
 import { business, categories, eventServices, extras, faq, img, money, products, testimonials, waLink, works, type Category } from './data';
-import { HeroFruits } from './HeroFruits';
+import { HeroFruits, melonPool } from './HeroFruits';
 import { LuminousType } from './components/LuminousType';
 import { Button, Icon, Reveal, ScrollWords, Stroke } from './ui';
 
 type CartApi = { qty: (id: string) => number; add: (id: string) => void; openCart: () => void };
 
 /* ───────────── Hero ───────────── */
-export function Hero() {
+export function Hero({ melons = false }: { melons?: boolean }) {
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
@@ -33,7 +33,7 @@ export function Hero() {
           </Reveal>
           <Reveal delay={0.25} className="mt-7 flex flex-wrap items-center gap-3">
             <Button href="#catalog">לבחירת מגש</Button>
-            <Button href="#events" variant="ghost">אירוע? הצעת מחיר</Button>
+            {melons ? <Button href="#wall" variant="ghost">לראות עבודות</Button> : <Button href="#events" variant="ghost">אירוע? הצעת מחיר</Button>}
           </Reveal>
           <Reveal delay={0.35}>
             <p className="mt-6 flex items-center gap-2 text-note text-mist">
@@ -50,10 +50,10 @@ export function Hero() {
             <span className="absolute -top-1.5 left-1/2 size-3 rounded-full bg-gold" />
           </motion.div>
           <div className="absolute inset-[18%] rounded-full bg-[radial-gradient(circle,rgb(214_60_130/0.28),transparent_68%)]" />
-          <HeroFruits />
+          <HeroFruits pool={melons ? melonPool : undefined} />
           <div className="absolute -top-2 right-0 z-10 rounded-2xl border border-gold/25 bg-night/85 px-4 py-3 text-note shadow-xl md:right-[-2%]">
             <span className="block font-display text-sub text-gold">אין שני מגשים זהים</span>
-            <span className="text-mist">לחצו על פרי והוא יעבור למרכז</span>
+            <span className="text-mist">{melons ? 'לחצו על אבטיח והוא יעבור למרכז' : 'לחצו על פרי והוא יעבור למרכז'}</span>
           </div>
         </div>
       </div>
@@ -220,12 +220,12 @@ export function Works() {
 }
 
 /* ───────────── Catalog: every price with its picture ───────────── */
-export function Catalog({ cart }: { cart: CartApi }) {
+export function Catalog({ cart, concrete = false }: { cart: CartApi; concrete?: boolean }) {
   const [filter, setFilter] = useState<Category | 'all'>('all');
   const list = products.filter(p => filter === 'all' || p.category === filter);
 
   return (
-    <section id="catalog" data-bg="#f4ede3" className="paper scroll-mt-20 px-5 py-20 text-ink md:px-8 md:py-28">
+    <section id="catalog" data-bg={concrete ? '#bfb8b2' : '#f4ede3'} className={`${concrete ? 'pom-skin pom-gray' : 'paper'} scroll-mt-20 px-5 py-20 text-ink md:px-8 md:py-28`}>
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
           <div>
@@ -233,7 +233,7 @@ export function Catalog({ cart }: { cart: CartApi }) {
               רואים את המגש. <Stroke>רואים את המחיר.</Stroke>
             </h2>
             <p className="mt-4 max-w-xl text-ink-soft">
-              בלי מחירון בצד ובלי לשאול "איזה זה". כל מגש עם התמונה, הגודל, כמה אנשים הוא מספיק והמחיר שלו.
+              בלי מחירון בצד ובלי לשאול "איזה זה". כל מגש עם התמונה, הגודל, כמה אנשים הוא מספיק והמחיר שלו. המחירים לא כוללים משלוח.
             </p>
           </div>
           <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 md:mx-0 md:px-0" role="tablist" aria-label="סינון מגשים">

@@ -1,20 +1,27 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { deliveryStatus, israelDate, type CalendarEvent } from './delivery';
-import { availability, business, extras, img, money, products, waLink, zones } from './data';
+import { availability, business, drinks, extras, img, money, pickupAddress, products, waLink, zones } from './data';
 import { watchOrphans } from './noOrphans';
 import { watchPageColor } from './pageColor';
 import { About, Catalog, Events, Faq, Footer, FruitStory, Hero, HowToOrder, Testimonials, Ticker, Works } from './Sections';
 import { Icon } from './ui';
-import { AppleBlessing, Carving, PlatterWall } from './Craft';
+import { AppleBlessing, AppleSimulator, Carving, PlatterWall } from './Craft';
 import { CursorTrail } from './CursorTrail';
+import { HeroMelons } from './HeroMelons';
+import { DatePicker, longDate } from './DatePicker';
 
-const allItems = [...products.map(p => ({ id: p.id, name: p.name, detail: p.size, price: p.price as number | null, from: p.from, tray: true })),
-  ...extras.map(x => ({ id: x.id, name: x.name, detail: x.note, price: x.price, from: x.from, tray: false }))];
+const allItems = [...products.map(p => ({ id: p.id, name: p.name, detail: p.size, price: p.price as number | null, from: p.from, tray: true, large: p.large })),
+  ...extras.map(x => ({ id: x.id, name: x.name, detail: x.note, price: x.price, from: x.from, tray: false, large: false })),
+  ...drinks.map(x => ({ id: x.id, name: x.name, detail: x.group, price: x.price as number | null, from: false, tray: false, large: false }))];
+const words = (t: string) => t.trim().split(/\s+/).filter(Boolean);
 
 const nav = [['המגשים', '#catalog'], ['איך מזמינים', '#how'], ['אירועים', '#events'], ['שאלות', '#faq']];
+// Version D (d.html): watermelon hero, trays right after it, Shlomi's works, then the pomegranate story.
+// The other sections wait for now.
+const navD = [['המגשים', '#catalog'], ['עבודות', '#wall'], ['הסיפור', '#story']];
 
-export default function App() {
+export default function App({ layout = 'a' }: { layout?: 'a' | 'd' }) {
   const [cart, setCart] = useState<Record<string, number>>({});
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState('');
@@ -37,7 +44,15 @@ export default function App() {
   return (
     <>
       <a href="#catalog" className="sr-only focus:not-sr-only focus:fixed focus:right-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-gold focus:px-4 focus:py-2 focus:text-night">דילוג למגשים</a>
-      <Header count={count} onCart={() => setOpen(true)} />
+      <Header count={count} onCart={() => setOpen(true)} links={layout === 'd' ? navD : nav} />
+      {layout === 'd' ? (
+      <main>
+        <HeroMelons />
+        <Catalog cart={api} concrete />
+        <PlatterWall cart={api} worksOnly />
+        <FruitStory />
+      </main>
+      ) : (
       <main>
         <Hero />
         <FruitStory />
@@ -53,6 +68,7 @@ export default function App() {
         <Testimonials />
         <Faq />
       </main>
+      )}
       <Footer cart={api} />
 
       {/* Floating WhatsApp, bottom right */}
@@ -98,7 +114,7 @@ export default function App() {
   );
 }
 
-function Header({ count, onCart }: { count: number; onCart: () => void }) {
+function Header({ count, onCart, links }: { count: number; onCart: () => void; links: string[][] }) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 40);
@@ -110,7 +126,7 @@ function Header({ count, onCart }: { count: number; onCart: () => void }) {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 md:h-20 md:px-8">
         <a href="#top" aria-label="האמנות שבפרי, לראש העמוד"><img src={img('logo-gold.webp')} alt="האמנות שבפרי" className="h-9 w-auto md:h-11" /></a>
         <nav className="hidden items-center gap-8 md:flex" aria-label="ניווט ראשי">
-          {nav.map(([l, h]) => <a key={h} href={h} className="text-note font-medium text-cream/85 transition-colors hover:text-gold">{l}</a>)}
+          {links.map(([l, h]) => <a key={h} href={h} className="text-note font-medium text-cream/85 transition-colors hover:text-gold">{l}</a>)}
         </nav>
         <div className="flex items-center gap-2">
           <a href="#catalog" className="hidden whitespace-nowrap rounded-full bg-gold px-5 py-2.5 text-note font-medium text-night transition-colors hover:bg-[#e4c487] sm:inline-flex">להזמין מגש</a>
@@ -129,10 +145,12 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
   open: boolean; onClose: () => void; cart: Record<string, number>; setCart: React.Dispatch<React.SetStateAction<Record<string, number>>>;
 }) {
   const [d, setD] = useState({
-    date: '', slot: '', zone: '', name: '', email: '', phone: '', toName: '', toPhone: '', address: '', checkAddress: false, greeting: '', notes: '', apple: '',
+    date: '', slot: '', zone: '', name: '', email: '', phone: '', toName: '', toPhone: '', address: '', checkAddress: false, greeting: '', notes: '', apple: '', melon: '',
   });
   const [error, setError] = useState('');
   const [review, setReview] = useState(false);
+  const [apples, setApples] = useState(false);
+  const closeApples = useRef(() => setApples(false)).current;
   const reviewRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
   useEffect(() => { if (review) { reviewRef.current?.scrollIntoView({ block: "center", behavior: "smooth" }); reviewRef.current?.focus({ preventScroll: true }); } }, [review]);
@@ -147,8 +165,9 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
     return () => clearInterval(timer);
   }, [open]);
   const today = israelDate(now);
-  const lastDate = new Date(today + 'T12:00:00Z'); lastDate.setUTCDate(lastDate.getUTCDate() + 90);
-  const maxDate = lastDate.toISOString().slice(0, 10);
+  // Orders open for this month and the next one only (Chaya, 12.11)
+  const [ty, tm] = today.split('-').map(Number);
+  const maxDate = new Date(Date.UTC(ty, tm + 1, 0)).toISOString().slice(0, 10);
   useEffect(() => {
     if (!open) return;
     const controller = new AbortController();
@@ -162,12 +181,16 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
       .finally(() => clearTimeout(timeout));
     return () => { cancelled = true; clearTimeout(timeout); controller.abort(); };
   }, [open, today, maxDate, calendarRetry]);
-  const delivery = deliveryStatus(d.date, calendar, availability.blockedDates, now);
   useEffect(() => { setReview(false); setError(''); }, [d, cart]);
   const lines = allItems.filter(i => cart[i.id]).map(i => ({ ...i, qty: cart[i.id] }));
   const zone = zones.find(z => z.id === d.zone);
   const pickup = d.zone === 'pickup';
+  const hospital = !!zone?.hospital;
+  const delivery = deliveryStatus(d.date, calendar, availability.blockedDates, now, pickup);
+  const slot = pickup ? delivery.slots[0] ?? '' : delivery.slots.includes(d.slot) ? d.slot : '';
+  const hasLarge = lines.some(l => l.large);
   const subtotal = lines.reduce((s, l) => s + (l.price ?? 0) * l.qty, 0);
+  const zoneLocked = (z: (typeof zones)[number]) => !!z.minSubtotal && subtotal < z.minSubtotal;
   const total = subtotal + (zone?.price ?? 0);
   const hasCustom = lines.some(l => l.price === null || l.from) || zone?.price === null;
   const change = (id: string, delta: number) => setCart(c => {
@@ -186,31 +209,39 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
   const validate = () => {
     if (!lines.some(l => l.tray)) return 'בחרו לפחות מגש אחד.';
     if (subtotal < availability.minOrder) return `ההזמנה המינימלית היא ${money(availability.minOrder)}.`;
-    const current = deliveryStatus(d.date, calendar, availability.blockedDates);
+    if (cart['x-bouquet'] && !hasLarge) return 'זר פירות אפשר להוסיף רק למגש בקוטר 40 ס״מ ומעלה.';
+    if (zone && zoneLocked(zone)) return `משלוח לכל חלקי הארץ אפשרי בהזמנה מעל ${money(zone.minSubtotal!)}.`;
+    const current = deliveryStatus(d.date, calendar, availability.blockedDates, new Date(), pickup);
     if (current.error) return current.error;
-    if (d.date > maxDate) return 'אפשר להזמין עד 90 יום מראש.';
-    if (!d.date || !delivery.slot || !d.zone || !d.name.trim() || !d.phone.trim()) return 'חסרים עוד כמה פרטים כדי שהמגש יגיע בזמן.';
+    if (d.date > maxDate) return 'אפשר להזמין עד סוף החודש הבא.';
+    if (d.date && d.zone && !pickup && !current.slots.includes(d.slot)) return 'בחרו טווח שעות לאספקה.';
+    if (!d.date || !slot || !d.zone || !d.name.trim() || !d.phone.trim()) return 'חסרים עוד כמה פרטים כדי שהמגש יגיע בזמן.';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email.trim())) return 'כתבו כתובת מייל תקינה לאישור ולמסמך התשלום.';
     if (!/^0[2-9]\d{7,8}$/.test(d.phone.replace(/[\s-]/g, ''))) return 'בדקו שמספר הטלפון כולל קידומת ומספר מלא.';
     if (!pickup && (!d.toName.trim() || !/^0[2-9]\d{7,8}$/.test(d.toPhone.replace(/[\s-]/g, '')))) return 'למשלוח צריך שם ומספר טלפון תקין של המקבל.';
     if (cart['x-apple'] && !d.apple.trim()) return 'כתבו מה לחרוט על התפוח.';
-    if (!pickup && !d.address.trim() && !d.checkAddress) return 'כתבו כתובת, או סמנו ששלומי יתאם אותה.';
+    if (cart['x-carve'] && !d.melon.trim()) return 'כתבו את הברכה לאבטיח, עד 5 מילים.';
+    if (hospital && !d.notes.trim()) return 'כתבו מחלקה, קומה ומספר חדר בבית החולים.';
+    if (!pickup && !hospital && !d.address.trim() && !d.checkAddress) return 'כתבו כתובת, או סמנו ששלומי יתאם אותה.';
     return '';
   };
   const message = () => [
     'הזמנה חדשה מהאתר 🍉',
     ...lines.map(l => `${l.qty} × ${l.name} (${l.detail})${l.price ? ' · ' + money(l.price * l.qty) : ''}`),
     '',
-    `תאריך: ${d.date.split('-').reverse().join('/')} · ${delivery.slot}`,
-    pickup ? 'איסוף עצמי' : `משלוח: ${zone?.label}${zone?.price ? ' · ' + money(zone.price) : ''}`,
-    pickup ? null : (d.checkAddress ? 'כתובת: שלומי יתאם עם המקבל' : `כתובת: ${d.address}`),
+    `תאריך: ${d.date.split('-').reverse().join('/')} · ${slot}`,
+    pickup ? `איסוף עצמי: ${pickupAddress}` : `משלוח: ${zone?.label}${zone?.price ? ' · ' + money(zone.price) : ''}`,
+    pickup || hospital ? null : (d.checkAddress ? 'כתובת: שלומי יתאם עם המקבל' : `כתובת: ${d.address}`),
     `מזמין: ${d.name} · ${d.phone}`,
     `מייל: ${d.email}`,
     d.toName || d.toPhone ? `מקבל: ${d.toName} · ${d.toPhone}` : null,
     cart['x-apple'] ? `חריטה על התפוח: ${d.apple}` : null,
+    cart['x-carve'] ? `ברכה על האבטיח: ${d.melon}` : null,
     d.greeting ? `ברכה: ${d.greeting}` : null,
-    d.notes ? `הערות: ${d.notes}` : null,
+    d.notes ? `${hospital ? 'מחלקה, קומה וחדר' : 'הערות'}: ${d.notes}` : null,
     '',
+    `מגשים ותוספות: ${money(subtotal)}`,
+    pickup ? 'איסוף עצמי: בלי עלות' : `משלוח: ${zone?.price == null ? 'בתיאום' : money(zone.price)}`,
     `סה״כ: ${money(total)}${hasCustom ? ' + פריטים בתיאום' : ''}`,
   ].filter(x => typeof x === 'string').join('\n');
   const sendWa = () => { const e = validate(); setError(e || (business.whatsapp === '972500000000' ? 'מספר הוואטסאפ של שלומי טרם הוגדר. ההזמנה לא נשלחה.' : '')); if (!e && business.whatsapp !== '972500000000') window.open(waLink(message()), '_blank', 'noopener,noreferrer'); };
@@ -261,16 +292,39 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
 
                   <div className="mt-6">
                     <p className="font-display text-sub">רגע לפני שסוגרים</p>
-                    <p className="text-note text-ink-soft">יין, פרלינים, פיצוחים או תפוח עם ברכה, על אותו מגש.</p>
+                    <p className="text-note text-ink-soft">תפוח או אבטיח עם ברכה, זר פירות, שייקים, פרלינים, יין או ליקר.</p>
                     <div className="mt-3 grid grid-cols-2 gap-2">
-                      {extras.slice(0, 4).map(x => (
-                        <button key={x.id} onClick={() => change(x.id, cart[x.id] ? -cart[x.id] : 1)} aria-pressed={!!cart[x.id]}
-                          className={`rounded-2xl border px-3 py-2.5 text-right transition-colors ${cart[x.id] ? 'border-wine bg-wine text-cream' : 'border-ink/15 hover:border-wine'}`}>
-                          <span className="flex items-center gap-1 font-medium leading-tight"><Icon name={cart[x.id] ? 'check' : 'plus'} className="size-4" />{x.name}</span>
-                          <span className={`block text-note ${cart[x.id] ? 'text-cream/80' : 'text-ink-soft'}`}>{x.price === null ? 'מחיר בתיאום' : (x.from ? 'החל מ-' : '') + money(x.price)}</span>
-                        </button>
-                      ))}
+                      {extras.slice(0, 4).map(x => {
+                        const locked = x.largeOnly && !hasLarge && !cart[x.id];
+                        return (
+                          <button key={x.id} onClick={() => change(x.id, cart[x.id] ? -cart[x.id] : 1)} aria-pressed={!!cart[x.id]} disabled={locked}
+                            className={`rounded-2xl border px-3 py-2.5 text-right transition-colors disabled:cursor-not-allowed disabled:opacity-55 ${cart[x.id] ? 'border-wine bg-wine text-cream' : 'border-ink/15 enabled:hover:border-wine'}`}>
+                            <span className="flex items-center gap-1 font-medium leading-tight"><Icon name={cart[x.id] ? 'check' : 'plus'} className="size-4" />{x.name}</span>
+                            <span className={`block text-note ${cart[x.id] ? 'text-cream/80' : 'text-ink-soft'}`}>{x.price === null ? 'מחיר בתיאום' : (x.from ? 'החל מ-' : '') + money(x.price)}</span>
+                            {x.largeOnly && <span className={`block text-[0.75rem] leading-snug ${cart[x.id] ? 'text-cream/80' : 'text-ink-soft'}`}>{x.note}</span>}
+                          </button>
+                        );
+                      })}
                     </div>
+                    <button type="button" onClick={() => setApples(true)} className="mt-2 flex items-center gap-1.5 text-note font-medium text-wine underline-offset-4 hover:underline">
+                      <Icon name="arrow" className="size-4" />איך נראה תפוח מגולף?
+                    </button>
+                    <AppleSimulator open={apples} onClose={closeApples} />
+                    {!!cart['x-bouquet'] && !hasLarge && <p role="alert" className="mt-2 text-note font-medium text-wine">זר פירות מתאים רק למגש בקוטר 40 ס״מ ומעלה. הוסיפו מגש כזה או הסירו את הזר.</p>}
+                    <AnimatePresence initial={false}>
+                      {!!cart['x-carve'] && (
+                        <motion.label
+                          initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                          className="block overflow-hidden"
+                        >
+                          <span className="mt-3 flex items-baseline justify-between text-note text-ink-soft">
+                            <span>מה לגלף על האבטיח?</span>
+                            <span>{words(d.melon).length} / 5 מילים</span>
+                          </span>
+                          <input value={d.melon} onChange={e => { const v = e.target.value; const w = v.trim().split(/\s+/); setD(o => ({ ...o, melon: w.length > 5 ? w.slice(0, 5).join(' ') : v })); }} className={`${field} mt-1`} placeholder="למשל: מזל טוב ליום ההולדת" />
+                        </motion.label>
+                      )}
+                    </AnimatePresence>
                     <AnimatePresence initial={false}>
                       {!!cart['x-apple'] && (
                         <motion.label
@@ -279,36 +333,74 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
                         >
                           <span className="mt-3 flex items-baseline justify-between text-note text-ink-soft">
                             <span>מה לחרוט על התפוח?</span>
-                            <span dir="ltr">{d.apple.length}/21</span>
+                            <span dir="ltr">{d.apple.length}/30</span>
                           </span>
-                          <input value={d.apple} onChange={set('apple')} maxLength={21} className={`${field} mt-1`} placeholder="למשל: אוהבת אותך" />
+                          <input value={d.apple} onChange={set('apple')} maxLength={30} className={`${field} mt-1`} placeholder="למשל: אוהבת אותך" />
                         </motion.label>
                       )}
                     </AnimatePresence>
                     <div className="no-scrollbar -mx-6 mt-2 flex gap-2 overflow-x-auto px-6">
                       {extras.slice(4).filter(x => !cart[x.id]).map(x => (
                         <button key={x.id} onClick={() => change(x.id, 1)} className="whitespace-nowrap rounded-full border border-ink/15 px-3.5 py-2 text-note hover:border-wine">
-                          <span className="flex items-center gap-1"><Icon name="plus" className="size-4" />{x.name}</span>
+                          <span className="flex items-center gap-1"><Icon name="plus" className="size-4" />{x.name}<span className="text-ink-soft">· {x.price === null ? 'בתיאום' : money(x.price)}</span></span>
                         </button>
                       ))}
                     </div>
+                    <label className="mt-3 block">
+                      <span className="mb-1 block text-note text-ink-soft">יין או ליקר ליד המגש</span>
+                      <span className="relative block">
+                      <select value="" onChange={e => { if (e.target.value) change(e.target.value, 1); }} className={`${field} cursor-pointer appearance-none pl-10`}>
+                        <option value="">בחרו בקבוק מהרשימה</option>
+                        {(['יין', 'ליקר'] as const).map(g => (
+                          <optgroup key={g} label={g === 'יין' ? 'יינות' : 'ליקרים'}>
+                            {drinks.filter(x => x.group === g).map(x => <option key={x.id} value={x.id}>{x.name} · {money(x.price)}</option>)}
+                          </optgroup>
+                        ))}
+                      </select>
+                      <Icon name="arrow" className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 -rotate-90 text-ink-soft" />
+                      </span>
+                    </label>
                   </div>
 
-                {review && <div ref={reviewRef} tabIndex={-1} role="status" className="mt-3 max-h-44 overflow-auto rounded-2xl bg-sand p-4 text-note"><strong>הפרטים מוכנים לבדיקה</strong><p>{d.name} · {d.email}</p><p>{d.date.split('-').reverse().join('/')} · {delivery.slot}</p><p>{pickup ? 'איסוף עצמי' : `${d.toName} · ${d.checkAddress ? 'כתובת בתיאום' : d.address}`}</p>{hasCustom && <p className="mt-2 font-medium">הסכום אינו סופי: פריטים בהתאמה אישית דורשים הצעת מחיר.</p>}<p className="mt-2">זו תצוגה מקדימה. ההזמנה לא נשמרה ולא בוצע חיוב.</p></div>}
+                {review && (
+                  <div ref={reviewRef} tabIndex={-1} role="status" className="mt-3 max-h-80 overflow-auto rounded-2xl bg-sand p-4 text-note">
+                    <strong className="block font-display text-sub font-normal">סיכום ההזמנה</strong>
+                    <ul className="mt-2 space-y-1">
+                      {lines.map(l => (
+                        <li key={l.id} className="flex justify-between gap-3"><span>{l.qty} × {l.name}</span><span className="shrink-0">{l.price ? money(l.price * l.qty) : 'בתיאום'}</span></li>
+                      ))}
+                    </ul>
+                    <div className="mt-3 space-y-1 border-t border-ink/15 pt-3">
+                      <p className="flex justify-between gap-3"><span>סכום המגשים והתוספות</span><span className="shrink-0">{money(subtotal)}</span></p>
+                      {/* Delivery on its own line (Chaya, 12.11) */}
+                      <p className="flex justify-between gap-3"><span>{pickup ? 'איסוף עצמי' : `משלוח ל${zone?.label}`}</span><span className="shrink-0">{pickup ? 'בלי עלות' : zone?.price == null ? 'בתיאום' : money(zone.price)}</span></p>
+                      <p className="flex justify-between gap-3 border-t border-ink/15 pt-2 font-medium text-ink"><span>סה״כ לתשלום</span><span className="shrink-0 font-display text-sub">{money(total)}</span></p>
+                    </div>
+                    <div className="mt-3 space-y-0.5 border-t border-ink/15 pt-3 text-ink-soft">
+                      <p>{d.name} · {d.email}</p>
+                      <p>{longDate(d.date)} · <span dir="ltr">{slot.replace('-', '–')}</span></p>
+                      <p>{pickup ? `איסוף עצמי · ${pickupAddress}` : hospital ? `${d.toName} · ${zone?.label} · ${d.notes}` : `${d.toName} · ${d.checkAddress ? 'כתובת בתיאום' : d.address}`}</p>
+                    </div>
+                    {hasCustom && <p className="mt-2 font-medium">הסכום אינו סופי: פריטים בהתאמה אישית דורשים הצעת מחיר.</p>}
+                    <p className="mt-2">זו תצוגה מקדימה. ההזמנה לא נשמרה ולא בוצע חיוב.</p>
+                  </div>
+                )}
 
                   <div className="order-step grid grid-cols-2 gap-3">
                     <p className="col-span-2 text-note text-ink-soft">לאן ומתי?</p>
                     <p className="col-span-2 font-display text-sub">בוחרים אזור אספקה</p>
                     <div className="col-span-2 grid grid-cols-2 gap-2">
                       {zones.map(z => (
-                        <label key={z.id} className={`cursor-pointer rounded-2xl border px-3 py-2.5 transition-colors ${d.zone === z.id ? 'border-wine bg-wine text-cream' : 'border-ink/15 hover:border-wine'} ${z.id === 'other' ? 'col-span-2' : ''}`}>
-                          <input type="radio" name="zone" value={z.id} checked={d.zone === z.id} onChange={set('zone')} className="sr-only" />
+                        <label key={z.id} className={`rounded-2xl border px-3 py-2.5 transition-colors ${zoneLocked(z) ? 'cursor-not-allowed opacity-55' : 'cursor-pointer'} ${d.zone === z.id ? 'border-wine bg-wine text-cream' : 'border-ink/15 hover:border-wine'} ${z.id === 'other' ? 'col-span-2' : ''}`}>
+                          <input type="radio" name="zone" value={z.id} checked={d.zone === z.id} onChange={set('zone')} disabled={zoneLocked(z) && d.zone !== z.id} className="sr-only" />
                           <span className="block font-medium leading-tight">{z.label}</span>
-                          <span className={`block text-note ${d.zone === z.id ? 'text-cream/80' : 'text-ink-soft'}`}>{z.price === null ? 'מחיר בתיאום' : z.price === 0 ? 'בלי עלות' : money(z.price)}</span>
+                          <span className={`block text-note ${d.zone === z.id ? 'text-cream/80' : 'text-ink-soft'}`}>{z.price === null ? 'מחיר לפי מרחק' : z.price === 0 ? 'בלי עלות' : money(z.price)}</span>
+                          {z.note && <span className={`block text-[0.75rem] leading-snug ${d.zone === z.id ? 'text-cream/80' : 'text-ink-soft'}`}>{z.note}</span>}
+                          {z.id === 'pickup' && <span dir="ltr" className={`block text-right text-[0.75rem] ${d.zone === z.id ? 'text-cream/80' : 'text-ink-soft'}`}>{availability.pickupHours.map(h => `${h}:00`).join('–')}</span>}
                         </label>
                       ))}
                     </div>
-                    {d.zone && !pickup && (
+                    {d.zone && !pickup && !hospital && (
                       <>
                         <label className="col-span-2"><span className="mb-1 block text-note text-ink-soft">כתובת מדויקת</span><input value={d.address} onChange={set('address')} disabled={d.checkAddress} className={`${field} disabled:opacity-50`} placeholder="רחוב, מספר, קומה ועיר" /></label>
                         <label className="col-span-2 flex items-center gap-2 text-note text-ink-soft">
@@ -318,10 +410,22 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
                       </>
                     )}
 
-                    <label className="col-span-2 mt-3"><span className="mb-1 block font-medium">באיזה יום לשמח אותם?</span><input type="date" min={today} max={maxDate} value={d.date} onInput={e => { const date = e.currentTarget.value; setD(v => ({ ...v, date })); }} onChange={set('date')} disabled={!d.zone} className={`${field} disabled:opacity-40`} /><span className="mt-1 block text-note text-ink-soft">{!d.zone ? 'בחרו קודם אזור או איסוף עצמי.' : 'עד 12:00 אפשר להזמין להיום, בכפוף לזמינות.'}</span></label>
+                    {hospital && <p className="col-span-2 rounded-xl bg-sand px-3 py-2 text-note">משלוח לבית החולים: את המחלקה, הקומה ומספר החדר כותבים למטה, בשדה ההערות.</p>}
+                    <div className="col-span-2 mt-3"><span className="mb-1 block font-medium">באיזה יום לשמח אותם?</span><DatePicker value={d.date} onChange={date => setD(v => ({ ...v, date }))} today={today} maxDate={maxDate} disabled={!d.zone} loading={!calendar && !calendarError} closedReason={date => deliveryStatus(date, calendar, availability.blockedDates, now, pickup).error} className={`${field} disabled:opacity-40`} /><span className="mt-1 block text-note text-ink-soft">{!d.zone ? 'בחרו קודם אזור או איסוף עצמי.' : 'עד 16:00 אפשר להזמין להיום, בכפוף לזמינות.'}</span></div>
                     <div className="col-span-2 rounded-2xl bg-sand p-4 text-note" aria-live="polite">
-                      {calendarError ? <><p>לוח החגים לא נטען. לא ניתן לאשר מועד עד שהבדיקה תושלם.</p><button className="mt-2 underline" onClick={() => setCalendarRetry(v => v + 1)}>לנסות שוב</button></> : d.date ? <p className={delivery.error ? 'text-gold-deep' : 'font-medium'}>{delivery.error || `זמן האספקה: ${delivery.slot}`}</p> : <p>בימי חול: הזמנה עד 12:00 לאספקה בתוך 4–6 שעות. להזמנה מראש: 09:00–16:00.</p>}
-                      <p className="mt-2 text-ink-soft">לשישי מזמינים עד חמישי ב־12:00. האספקה מסתיימת שלוש שעות לפני כניסת שבת. בשבת ובחג אנחנו סגורים. ערבי חג בתיאום מראש.</p>
+                      {calendarError ? <><p>לוח החגים לא נטען. לא ניתן לאשר מועד עד שהבדיקה תושלם.</p><button className="mt-2 underline" onClick={() => setCalendarRetry(v => v + 1)}>לנסות שוב</button></> : d.date ? (delivery.error ? <p className="text-gold-deep">{delivery.error}</p> : pickup ? <p className="font-medium">{slot}, {pickupAddress}</p> : <p className="font-medium">בחרו טווח שעות לאספקה:</p>) : <p>להזמנה לאותו יום מזמינים עד 16:00. משלוחים בטווחים של שלוש שעות, בין 08:00 ל־20:00.</p>}
+                      {d.date && !delivery.error && !pickup && (
+                        <div className="mt-2 grid grid-cols-2 gap-2" role="radiogroup" aria-label="טווח שעות לאספקה">
+                          {delivery.slots.map(s => (
+                            <label key={s} className={`cursor-pointer rounded-xl border px-3 py-2 text-center font-medium transition-colors ${slot === s ? 'border-wine bg-wine text-cream' : 'border-ink/15 bg-white/60 hover:border-wine'}`}>
+                              <input type="radio" name="slot" value={s} checked={slot === s} onChange={set('slot')} className="sr-only" />
+                              <span dir="ltr">{s.replace('-', '–')}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                      {delivery.note && <p className="mt-2 font-medium">{delivery.note}</p>}
+                      <p className="mt-2 text-ink-soft">לשישי מזמינים עד חמישי ב־20:00, ולערב חג עד 20:00 בערב שלפני. בשבת ובחג אנחנו סגורים.</p>
                       <a href="https://www.hebcal.com" target="_blank" rel="noreferrer" className="mt-2 inline-block text-ink-soft underline">זמני שבת וחג: Hebcal · ירושלים</a>
                     </div>
                     <p className="col-span-2 order-step text-note text-ink-soft">פרטים וברכה אישית</p>
@@ -332,7 +436,7 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
                     <label><span className="mb-1 block text-note text-ink-soft">שם המקבל</span><input value={d.toName} onChange={set('toName')} className={field} placeholder="אם זו מתנה" /></label>
                     <label><span className="mb-1 block text-note text-ink-soft">טלפון המקבל</span><input type="tel" value={d.toPhone} onChange={set('toPhone')} className={field} dir="ltr" /></label>
                     <label className="col-span-2"><span className="mb-1 block text-note text-ink-soft">ברכה על המגש (לא חובה)</span><input value={d.greeting} onChange={set('greeting')} className={field} placeholder="מזל טוב!" /></label>
-                    <label className="col-span-2"><span className="mb-1 block text-note text-ink-soft">הערות (לא חובה)</span><input value={d.notes} onChange={set('notes')} className={field} placeholder="אלרגיות, קוד לבניין, בלי קיווי..." /></label>
+                    <label className="col-span-2"><span className={`mb-1 block text-note ${hospital ? 'font-medium text-ink' : 'text-ink-soft'}`}>{hospital ? 'מחלקה, קומה ומספר חדר' : 'הערות (לא חובה)'}</span><input value={d.notes} onChange={set('notes')} className={field} placeholder={hospital ? 'למשל: יולדות ב׳, קומה 4, חדר 12' : 'אלרגיות, קוד לבניין, בלי קיווי...'} /></label>
                   </div>
                 </>
               )}

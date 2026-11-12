@@ -217,7 +217,7 @@ const stages: Stage[] = [
             onClick={() => cart.add(carve.id)}
             className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-ink/40 bg-cream/50 px-5 py-3.5 font-medium text-ink transition-colors hover:border-ink"
           >
-            אבטיח מגולף, החל מ-{money(carve.price!)} <Icon name="plus" className="size-4" />
+            אבטיח מגולף, {carve.from ? 'החל מ-' : ''}{money(carve.price!)} <Icon name="plus" className="size-4" />
           </button>
         </div>
       </>
@@ -433,7 +433,7 @@ function Shop({ cart }: { cart: CartApi }) {
         <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
           <div>
             <h2 className="text-section text-ink">בוחרים מגש. <span className="text-gold-deep">רואים מחיר.</span></h2>
-            <p className="mt-4 max-w-xl text-ink-soft">מתנה קטנה או שולחן מלא? בחרו לפי מספר הסועדים, הגודל והתקציב. את הברכה והתוספות נוסיף בשלב הבא.</p>
+            <p className="mt-4 max-w-xl text-ink-soft">מתנה קטנה או שולחן מלא? בחרו לפי מספר הסועדים, הגודל והתקציב. את הברכה והתוספות נוסיף בשלב הבא. המחירים לא כוללים משלוח.</p>
           </div>
           <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 md:mx-0 md:px-0" role="tablist" aria-label="סינון מגשים">
             {categories.map(c => (

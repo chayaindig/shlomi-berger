@@ -180,7 +180,7 @@ const stages: Stage[] = [
             onClick={() => cart.add(carve.id)}
             className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-ink/40 bg-cream/50 px-5 py-3.5 font-medium text-ink transition-colors hover:border-ink"
           >
-            אבטיח מגולף, החל מ-{money(carve.price!)} <Icon name="plus" className="size-4" />
+            אבטיח מגולף, {carve.from ? 'החל מ-' : ''}{money(carve.price!)} <Icon name="plus" className="size-4" />
           </button>
         </div>
       </>
