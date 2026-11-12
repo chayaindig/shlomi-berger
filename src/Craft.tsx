@@ -225,7 +225,7 @@ export function PlatterWall({ cart, worksOnly = false }: { cart: CartApi; worksO
 }
 
 // Version D's works wall: endless depth loop of Shlomi's photos on soft grey-blue (Chaya's spec, 12.11).
-const loopItems = wallWorks.map(w => ({ src: img(w.root ? `${w.src}.webp` : `works/${w.src}.webp`), alt: `${w.title}, עבודה של שלומי`, name: w.title, meta: 'עבודה של שלומי' }));
+const loopItems = wallWorks.map(w => ({ src: img(w.root ? `${w.src}.webp` : `works/${w.src}.webp`), alt: w.title, name: w.title, meta: 'האמנות שבפרי' }));
 function WorksLoop() {
   return (
     <section id="wall" data-bg="#D8E0E6" className="relative overflow-x-clip pt-20 text-ink md:pt-28">
