@@ -1,6 +1,6 @@
 import { createClient, type Session } from '@supabase/supabase-js';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { drinks, extras, img, money } from '../data';
+import { availability, drinks, extras, img, money } from '../data';
 import { israelDate } from '../delivery';
 import { SUPABASE_KEY, SUPABASE_URL } from '../live';
 import { Icon } from '../ui';
@@ -26,6 +26,38 @@ const STOCK_GROUPS = [
 ];
 const shortDate = (d: string) => new Intl.DateTimeFormat('he-IL', { weekday: 'short', day: 'numeric', month: 'numeric', timeZone: 'UTC' }).format(new Date(d + 'T12:00:00Z'));
 const card = 'rounded-3xl bg-white/80 p-4 shadow-[0_1px_0_rgb(42_20_36/0.06)]';
+const SLOTS = availability.timeSlots; // 08:00-11:00, 11:00-14:00, 14:00-17:00, 17:00-20:00
+const slotLabel = (x: string) => x.replace(/:00/g, '').replace('-', '–').replace(/^0/, '');
+
+/* Closed time slots for one day, read and toggled straight in the database */
+function useDaySlots(day: string | null) {
+  const [shut, setShut] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!day) return;
+    db.from('blocked_slots').select('slot').eq('day', day).then(({ data }) => setShut(new Set((data ?? []).map(r => r.slot))));
+  }, [day]);
+  const toggle = async (slot: string) => {
+    if (!day) return;
+    const close = !shut.has(slot);
+    setShut(s => { const n = new Set(s); if (close) n.add(slot); else n.delete(slot); return n; });
+    const { error } = close ? await db.from('blocked_slots').insert({ day, slot }) : await db.from('blocked_slots').delete().eq('day', day).eq('slot', slot);
+    if (error) alert('השינוי לא נשמר. נסו שוב.');
+  };
+  return { shut, toggle };
+}
+
+function SlotChips({ shut, toggle, disabled }: { shut: Set<string>; toggle: (s: string) => void; disabled?: boolean }) {
+  return (
+    <div role="group" aria-label="טווחי שעות" className="mt-2 grid grid-cols-4 gap-1.5">
+      {SLOTS.map(x => (
+        <button key={x} disabled={disabled} onClick={() => toggle(x)} aria-pressed={shut.has(x)}
+          className={`rounded-xl py-2.5 text-note tabular-nums disabled:opacity-40 ${shut.has(x) ? 'bg-wine text-cream line-through decoration-cream/50' : 'bg-sand text-ink'}`}>
+          <bdi dir="ltr">{slotLabel(x)}</bdi>
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export default function Admin() {
   const [session, setSession] = useState<Session | null>(null);
@@ -101,7 +133,7 @@ function Panel({ email }: { email: string }) {
       <p className="mt-6 text-center text-note text-ink-soft">מחובר/ת בתור <bdi dir="ltr">{email}</bdi> · <button onClick={() => db.auth.signOut()} className="underline underline-offset-4">יציאה</button></p>
       <nav aria-label="מסכים" className="fixed inset-x-0 bottom-0 z-20 border-t border-ink/10 bg-cream/95 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2">
         <div className="mx-auto grid max-w-xl grid-cols-3 px-4">
-          {([['orders', 'הזמנות'], ['stock', 'מלאי'], ['days', 'ימים סגורים']] as const).map(([id, label]) => (
+          {([['orders', 'הזמנות'], ['stock', 'מלאי'], ['days', 'ימים ושעות']] as const).map(([id, label]) => (
             <button key={id} onClick={() => setTab(id)} aria-current={tab === id ? 'page' : undefined}
               className={`rounded-2xl py-3 font-medium ${tab === id ? 'bg-wine text-cream' : 'text-ink-soft'}`}>{label}</button>
           ))}
@@ -122,7 +154,9 @@ function ClosedToday() {
     const { error } = await db.from('site_settings').update({ closed_today: next ? today : null, updated_at: new Date().toISOString() }).eq('id', 1);
     if (error) { setClosed(!next); alert('השינוי לא נשמר. נסו שוב.'); }
   };
+  const { shut, toggle: toggleSlot } = useDaySlots(today);
   return (
+    <div className="space-y-2">
     <button onClick={toggle} disabled={closed === null} role="switch" aria-checked={!!closed}
       className={`flex w-full items-center justify-between gap-4 rounded-3xl p-5 text-right transition-colors ${closed ? 'bg-wine text-cream' : 'bg-white/80 text-ink'}`}>
       <span>
@@ -133,6 +167,13 @@ function ClosedToday() {
         <span className={`absolute top-1 size-6 rounded-full bg-white shadow transition-all ${closed ? 'left-1' : 'left-7'}`} />
       </span>
     </button>
+    {!closed && (
+      <div className="rounded-3xl bg-white/80 px-5 py-4">
+        <p className="text-note text-ink-soft">או לסגור רק חלק מהשעות היום:</p>
+        <SlotChips shut={shut} toggle={toggleSlot} />
+      </div>
+    )}
+    </div>
   );
 }
 
@@ -238,29 +279,39 @@ function Stock() {
   );
 }
 
-/* Tap a day to close it for orders, tap again to reopen. This month and the next, like the site. */
+/* Tap a day to pick it, then close the whole day or only some time slots. This month and the next, like the site. */
 function Days() {
   const today = israelDate();
   const [blocked, setBlocked] = useState<Set<string> | null>(null);
+  const [partial, setPartial] = useState<Record<string, number>>({});
   const [offset, setOffset] = useState(0);
-  useEffect(() => { db.from('blocked_dates').select('day').gte('day', today).then(({ data }) => setBlocked(new Set((data ?? []).map(r => r.day)))); }, [today]);
+  const [picked, setPicked] = useState<string | null>(null);
+  const { shut, toggle: toggleSlot } = useDaySlots(picked);
+  const load = useCallback(() => {
+    db.from('blocked_dates').select('day').gte('day', today).then(({ data }) => setBlocked(new Set((data ?? []).map(r => r.day))));
+    db.from('blocked_slots').select('day').gte('day', today).then(({ data }) => setPartial((data ?? []).reduce<Record<string, number>>((m, r) => ((m[r.day] = (m[r.day] ?? 0) + 1), m), {})));
+  }, [today]);
+  useEffect(() => { load(); }, [load]);
+  useEffect(() => { if (picked) setPartial(p => ({ ...p, [picked]: shut.size })); }, [shut, picked]);
+  useEffect(() => { if (picked) document.getElementById('day-editor')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, [picked]);
   const [ty, tm] = today.split('-').map(Number);
   const year = ty + Math.floor((tm - 1 + offset) / 12), month = (tm - 1 + offset) % 12;
   const first = new Date(Date.UTC(year, month, 1)).getUTCDay();
   const days = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
   const iso = (dd: number) => `${year}-${String(month + 1).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
   const title = new Intl.DateTimeFormat('he-IL', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(year, month, 15)));
-  const toggle = async (day: string) => {
+  const toggleDay = async (day: string) => {
     const close = !blocked!.has(day);
     setBlocked(s => { const n = new Set(s); if (close) n.add(day); else n.delete(day); return n; });
     const { error } = close ? await db.from('blocked_dates').insert({ day }) : await db.from('blocked_dates').delete().eq('day', day);
     if (error) alert('השינוי לא נשמר. נסו שוב.');
   };
-  const list = useMemo(() => [...(blocked ?? [])].sort(), [blocked]);
+  const list = useMemo(() => [...new Set([...(blocked ?? []), ...Object.keys(partial).filter(k => partial[k] > 0)])].sort(), [blocked, partial]);
   if (!blocked) return <p className="py-10 text-center text-ink-soft">טוען...</p>;
+  const pickedClosed = !!picked && blocked.has(picked);
   return (
-    <section aria-label="ימים סגורים" className="space-y-4">
-      <p className="px-1 text-note text-ink-soft">לחיצה על יום סוגרת אותו להזמנות באתר. לחיצה נוספת פותחת. שבתות וחגים כבר סגורים אוטומטית.</p>
+    <section aria-label="ימים ושעות סגורים" className="space-y-4">
+      <p className="px-1 text-note text-ink-soft">בוחרים יום, ואז סוגרים את כולו או רק חלק מהשעות. שבתות וחגים כבר סגורים אוטומטית.</p>
       <div className={card}>
         <div className="mb-2 flex items-center justify-between">
           <button onClick={() => setOffset(0)} disabled={offset === 0} aria-label="החודש הקודם" className="grid size-10 place-items-center rounded-full disabled:opacity-25"><Icon name="arrow" className="size-5 rotate-180" /></button>
@@ -271,24 +322,45 @@ function Days() {
         <div className="grid grid-cols-7 gap-y-1.5 text-center">
           {Array.from({ length: first }, (_, k) => <span key={'e' + k} />)}
           {Array.from({ length: days }, (_, k) => {
-            const day = iso(k + 1), past = day < today, sat = new Date(day + 'T12:00:00Z').getUTCDay() === 6, isBlocked = blocked.has(day);
+            const day = iso(k + 1), past = day < today, sat = new Date(day + 'T12:00:00Z').getUTCDay() === 6;
+            const full = blocked.has(day), some = !full && (partial[day] ?? 0) > 0, isPicked = picked === day;
             return (
-              <button key={day} disabled={past || sat} onClick={() => toggle(day)} aria-pressed={isBlocked} aria-label={`${k + 1}${isBlocked ? ', סגור' : ''}`}
-                className={`mx-auto grid size-10 place-items-center rounded-full tabular-nums disabled:text-ink/25 ${isBlocked ? 'bg-wine font-medium text-cream' : 'hover:bg-sand'} ${day === today && !isBlocked ? 'ring-1 ring-wine/50' : ''}`}>{k + 1}</button>
+              <button key={day} disabled={past || sat} onClick={() => setPicked(isPicked ? null : day)} aria-pressed={isPicked}
+                aria-label={`${k + 1}${full ? ', סגור' : some ? ', סגור חלקית' : ''}`}
+                className={`relative mx-auto grid size-10 place-items-center rounded-full tabular-nums disabled:text-ink/25 ${full ? 'bg-wine font-medium text-cream' : 'hover:bg-sand'} ${isPicked ? 'ring-2 ring-gold ring-offset-2 ring-offset-white' : day === today && !full ? 'ring-1 ring-wine/50' : ''}`}>
+                {k + 1}
+                {some && <span aria-hidden className="absolute bottom-1 size-1.5 rounded-full bg-wine" />}
+              </button>
             );
           })}
         </div>
+        <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[0.75rem] text-ink-soft">
+          <span className="flex items-center gap-1.5"><span className="size-3 rounded-full bg-wine" />סגור כל היום</span>
+          <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-wine" />חלק מהשעות סגורות</span>
+        </p>
       </div>
+      {picked && (
+        <div id="day-editor" className={card}>
+          <h2 className="font-display text-sub font-bold">{shortDate(picked)}</h2>
+          <button role="switch" aria-checked={pickedClosed} onClick={() => toggleDay(picked)}
+            className={`mt-2 flex w-full items-center justify-between rounded-2xl px-4 py-3 text-right ${pickedClosed ? 'bg-wine text-cream' : 'bg-sand'}`}>
+            <span className="font-medium">{pickedClosed ? 'כל היום סגור' : 'לסגור את כל היום'}</span>
+            <span aria-hidden className={`relative h-6 w-11 rounded-full ${pickedClosed ? 'bg-cream/30' : 'bg-ink/20'}`}><span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${pickedClosed ? 'left-0.5' : 'left-[1.375rem]'}`} /></span>
+          </button>
+          <p className="mt-3 text-note text-ink-soft">{pickedClosed ? 'כשכל היום סגור, השעות לא משנות.' : 'או לסגור רק חלק מהשעות:'}</p>
+          <SlotChips shut={shut} toggle={toggleSlot} disabled={pickedClosed} />
+        </div>
+      )}
       <div className={card}>
-        <h2 className="font-display text-sub font-bold">ימים סגורים</h2>
+        <h2 className="font-display text-sub font-bold">סגור בימים הקרובים</h2>
         {list.length ? (
           <ul className="mt-2">{list.map(dd => (
             <li key={dd} className="flex items-center justify-between border-t border-ink/10 py-2.5 first:border-0">
-              <span>{shortDate(dd)}</span>
-              <button onClick={() => toggle(dd)} className="text-note text-wine underline underline-offset-4">לפתוח</button>
+              <span>{shortDate(dd)} <span className="text-note text-ink-soft">· {blocked.has(dd) ? 'כל היום' : `${partial[dd]} טווחי שעות`}</span></span>
+              <button onClick={() => setPicked(dd)} className="text-note text-wine underline underline-offset-4">עריכה</button>
             </li>
           ))}</ul>
-        ) : <p className="mt-1 text-note text-ink-soft">אין ימים סגורים.</p>}
+        ) : <p className="mt-1 text-note text-ink-soft">אין ימים או שעות סגורים.</p>}
       </div>
     </section>
   );

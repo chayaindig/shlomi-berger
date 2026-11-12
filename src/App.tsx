@@ -177,9 +177,15 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
   // Shlomi's live switches from the admin panel, refreshed each time the cart opens
   const live = useLive(open);
   const blocked = useMemo(() => [...availability.blockedDates, ...live.blocked], [live.blocked]);
-  const dayStatus = (date: string, when: Date, pu: boolean) => live.closedToday && date === israelDate(when)
-    ? { error: CLOSED_TODAY, slots: [] as string[], note: '' }
-    : deliveryStatus(date, calendar, blocked, when, pu);
+  const dayStatus = (date: string, when: Date, pu: boolean) => {
+    if (live.closedToday && date === israelDate(when)) return { error: CLOSED_TODAY, slots: [] as string[], note: '' };
+    const st = deliveryStatus(date, calendar, blocked, when, pu);
+    // Time slots Shlomi closed from his panel (pickup keeps its own window)
+    const shut = live.blockedSlots[date];
+    if (st.error || pu || !shut?.length) return st;
+    const slots = st.slots.filter(x => !shut.includes(x));
+    return slots.length ? { ...st, slots } : { error: 'ביום הזה כל טווחי השעות כבר מלאים. בחרו יום אחר, או כתבו לשלומי בוואטסאפ.', slots, note: '' };
+  };
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     if (!open) return;

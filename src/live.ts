@@ -7,8 +7,8 @@ import { israelDate } from './delivery';
 export const SUPABASE_URL = 'https://snryyscqmbqfcmjwwwuv.supabase.co';
 export const SUPABASE_KEY = 'sb_publishable_MjyZe37629VmNCB_GBl_lw_EtAGMGEf';
 
-export type Live = { soldOut: Set<string>; blocked: string[]; closedToday: boolean; ready: boolean };
-const EMPTY: Live = { soldOut: new Set(), blocked: [], closedToday: false, ready: false };
+export type Live = { soldOut: Set<string>; blocked: string[]; blockedSlots: Record<string, string[]>; closedToday: boolean; ready: boolean };
+const EMPTY: Live = { soldOut: new Set(), blocked: [], blockedSlots: {}, closedToday: false, ready: false };
 
 const get = (path: string) =>
   fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: { apikey: SUPABASE_KEY } }).then(r => (r.ok ? r.json() : Promise.reject(r.status)));
@@ -20,9 +20,11 @@ export function loadLive(force = false): Promise<Live> {
       get('stock?select=id&available=eq.false'),
       get(`blocked_dates?select=day&day=gte.${israelDate()}`),
       get('site_settings?select=closed_today&id=eq.1'),
-    ]).then(([stock, days, settings]: [{ id: string }[], { day: string }[], { closed_today: string | null }[]]) => ({
+      get(`blocked_slots?select=day,slot&day=gte.${israelDate()}`),
+    ]).then(([stock, days, settings, slots]: [{ id: string }[], { day: string }[], { closed_today: string | null }[], { day: string; slot: string }[]]) => ({
       soldOut: new Set(stock.map(s => s.id)),
       blocked: days.map(d => d.day),
+      blockedSlots: slots.reduce<Record<string, string[]>>((m, s) => ((m[s.day] ??= []).push(s.slot), m), {}),
       closedToday: settings[0]?.closed_today === israelDate(),
       ready: true,
     })).catch(() => ({ ...EMPTY, ready: true }));
