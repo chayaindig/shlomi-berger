@@ -661,7 +661,7 @@ export function Footer({ cart }: { cart: CartApi }) {
             {business.areas.join(' · ')} · <bdi dir="ltr">{business.phoneDisplay}</bdi>
           </p>
           <div className="flex items-center gap-3">
-            <a href={business.instagram} aria-label="אינסטגרם" className="grid size-10 place-items-center rounded-full border border-cream/20 text-cream hover:border-gold hover:text-gold"><Icon name="instagram" /></a>
+            <a href={business.instagram} target="_blank" rel="noreferrer" aria-label="אינסטגרם של האמנות שבפרי" className="grid size-10 place-items-center rounded-full border border-cream/20 text-cream hover:border-gold hover:text-gold"><Icon name="instagram" /></a>
             <a href={waLink('היי שלומי')} target="_blank" rel="noreferrer" aria-label="וואטסאפ" className="grid size-10 place-items-center rounded-full border border-cream/20 text-cream hover:border-gold hover:text-gold"><Icon name="whatsapp" /></a>
           </div>
         </div>

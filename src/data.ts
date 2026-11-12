@@ -7,7 +7,7 @@ export const business = {
   // Shlomi's number (Chaya, 12.11)
   whatsapp: '972545730608',
   phoneDisplay: '054-573-0608',
-  instagram: '#', // TODO
+  instagram: 'https://www.instagram.com/slomobr/',
   areas: ['ירושלים', 'גבעת זאב', 'מודיעין'],
   fromPrice: 285,
 };
