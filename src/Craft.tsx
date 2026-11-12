@@ -2,6 +2,7 @@ import { animate, motion, useInView, useReducedMotion } from 'motion/react';
 import { lazy, Suspense, useEffect, useRef, useState, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { img, money, products, works } from './data';
+import { DepthLoop } from './DepthLoop';
 
 // three.js effects (React Bits Pro) load only after the page has loaded and the section is near,
 // with a static image until then, so phones never pay for them up front.
@@ -219,6 +220,28 @@ const wallWorks = [
 
 
 export function PlatterWall({ cart, worksOnly = false }: { cart: CartApi; worksOnly?: boolean }) {
+  if (worksOnly) return <WorksLoop />;
+  return <ConcaveWall cart={cart} />;
+}
+
+// Version D's works wall: endless depth loop of Shlomi's photos on soft grey-blue (Chaya's spec, 12.11).
+const loopItems = wallWorks.map(w => ({ src: img(w.root ? `${w.src}.webp` : `works/${w.src}.webp`), alt: `${w.title}, עבודה של שלומי`, name: w.title, meta: 'עבודה של שלומי' }));
+function WorksLoop() {
+  return (
+    <section id="wall" data-bg="#D8E0E6" className="relative overflow-x-clip pt-20 text-ink md:pt-28">
+      <div className="relative z-10 mx-auto max-w-3xl px-5 text-center">
+        <h2 className="mt-4 text-section">מהעבודות <span className="text-wine">של שלומי.</span></h2>
+        <p className="mx-auto mt-3 max-w-md text-ink-soft">גררו הצידה, או לחצו על מגש בצד כדי לעבור אליו.</p>
+      </div>
+      <div className="relative -mt-2 h-[86vw] md:h-[min(56vw,46rem)] lg:h-[min(40vw,40rem)]">
+        <DepthLoop items={loopItems} label="סדרת עבודות של שלומי בלולאה. גוררים לצדדים, לוחצים על כרטיס בצד או משתמשים בחיצים." />
+      </div>
+    </section>
+  );
+}
+
+function ConcaveWall({ cart }: { cart: CartApi }) {
+  const worksOnly = false;
   const ref = useRef<HTMLDivElement>(null);
   const ready = useReadyNear(ref);
   const reduce = useReducedMotion();
