@@ -1,1 +1,0 @@
-import{c as o,j as t,r}from"./index-DoWsudRi.js";import{a as e}from"./App-C6RPSndA.js";import{A as s}from"./Floating-Y7HG64Kr.js";import"./live-Tn9WWJ5H.js";import"./Legal-CM5mGvOf.js";o.createRoot(document.getElementById("root")).render(t.jsx(r.StrictMode,{children:t.jsx(s,{children:t.jsx(e,{layout:"d"})})}));
