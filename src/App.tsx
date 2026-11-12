@@ -442,7 +442,7 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
                 <p className="text-note text-ink-soft">{zone ? (pickup ? 'איסוף עצמי, בלי עלות' : zone.price === null ? 'המשלוח יתואם מול שלומי' : `כולל משלוח ל${zone.label}`) : 'המשלוח מתווסף לפי האזור'}</p>
                 {error && <p role="alert" className="mt-2 text-note font-medium text-wine">{error}</p>}
                 <button onClick={previewOrder} className="mt-3 w-full rounded-full bg-gold py-3 font-medium text-night">בדיקת פרטים וסיכום הזמנה</button>
-                {/* TODO: Grow (Meshulam) checkout, Shlomi already has an account. Bit and PayBox can go through Grow too. */}
+                {/* TODO: UPay (YPay) checkout via Supabase, Shlomi chose UPay (12.11), API docs and credentials still needed. */}
                 <button disabled title="הסליקה תחובר בקרוב" className="mt-4 w-full cursor-not-allowed rounded-full bg-wine/40 py-3.5 font-medium text-cream">
                   התשלום באתר עדיין לא פעיל
                 </button>
