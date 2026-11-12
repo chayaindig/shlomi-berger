@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:cf": "node scripts/build-cf.mjs",
+    "deploy": "node scripts/build-cf.mjs && npx -y wrangler@4 deploy"
   },
   "dependencies": {
     "@types/three": "^0.180.0",

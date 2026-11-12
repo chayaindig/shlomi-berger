@@ -1,0 +1,11 @@
+// shlomifruit.com on Chaya's Cloudflare account. Deploy: npm run deploy
+{
+  "name": "shlomifruit",
+  "compatibility_date": "2026-11-01",
+  "assets": { "directory": "./dist-cf", "not_found_handling": "single-page-application" },
+  "workers_dev": false,
+  "routes": [
+    { "pattern": "shlomifruit.com", "custom_domain": true },
+    { "pattern": "www.shlomifruit.com", "custom_domain": true }
+  ]
+}
