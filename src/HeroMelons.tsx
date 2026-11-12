@@ -228,16 +228,18 @@ function HeroSpot() {
 // The lines tell the story in order: the name, the craft, and the promise. Set in Lia Shalehet, gold foil.
 // The hotspot dots were tried and taken out (Chaya, 12.11).
 // Text on the right, melon on the left with a little overlap. Scrolling down slides the next melon in
-// from the right: 3 melons on a phone, 4 on desktop. The section is pinned while they change.
+// from the right: 4 melons on a phone, 5 on desktop. The section is pinned while they change.
 type Story = { id: string; tint: string; size: [number, number]; pieces: string[] };
 const story: Story[] = [
   { id: 'rose', tint: '#861a4c', size: [884, 900], pieces: ['fruit/straw.webp', 'fruit/mint.webp', 'fruit/seeds.webp', 'hero/grapes.webp'] },
   { id: 'heart', tint: '#7d1446', size: [834, 900], pieces: ['hero/strawberries.webp', 'fruit/mint.webp', 'fruit/seeds.webp', 'hero/grapes.webp'] },
   { id: 'roses', tint: '#6b0f3b', size: [900, 628], pieces: ['hero/grapes.webp', 'fruit/straw.webp', 'fruit/seeds.webp', 'fruit/mint.webp'] },
-  { id: 'birthday', tint: '#731243', size: [863, 900], pieces: ['hero/strawberries.webp', 'fruit/seeds.webp', 'fruit/mint.webp', 'fruit/pomegranate-open.webp'] },
+  { id: 'birthday', tint: '#731243', size: [498, 434], pieces: ['hero/strawberries.webp', 'fruit/seeds.webp', 'fruit/mint.webp', 'fruit/pomegranate-open.webp'] },
+  // Portrait carving (Chaya, 12.11): shown on phones too
+  { id: 'portrait', tint: '#6b0f3b', size: [782, 661], pieces: ['hero/grapes.webp', 'fruit/straw.webp', 'fruit/seeds.webp', 'fruit/mint.webp'] },
 ];
 // First melon: flowers only, no names on it (Chaya, 12.11)
-const PHONE = ['rose', 'heart', 'birthday'];
+const PHONE = ['rose', 'heart', 'birthday', 'portrait'];
 // Scroll lines: the site name first, then sub-headlines. A phone shows 3, desktop 4 (the third is desktop only).
 const LINES = [
   { text: 'האמנות שבפרי', title: true, phone: true },
@@ -245,6 +247,8 @@ const LINES = [
   { text: 'אבטיח מגולף עם השם והברכה שלכם', phone: false },
   { text: 'אתם בוחרים את מי לשמח, אנחנו מעצבים ושולחים עד אליהם', phone: true },
 ];
+// Phones keep just two pieces in place for the whole story: [image, slot]
+const PHONE_PIECES: [string, number][] = [['hero/strawberries.webp', 0], ['fruit/mint.webp', 1]];
 // Where the pieces drift: one big and near (soft focus on desktop), the rest small and far
 const SLOTS = [
   { cls: 'left-[-4%] bottom-[-2%] w-[24%] md:w-[20%] z-20 md:blur-[3px]', from: { x: -60, y: 40 }, bob: '7s' },
@@ -354,8 +358,14 @@ function HeroStory() {
           {/* The melon track */}
           <div className="relative z-10 -mt-[1svh] min-h-0 md:col-start-2 md:row-span-4 md:row-start-1 md:-mr-[9%] md:mt-0"
 >
+            {!wide && PHONE_PIECES.map(([src, j]) => (
+              <motion.div key={src} aria-hidden className={`pointer-events-none absolute ${SLOTS[j].cls}`}
+                initial={reduce ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1.2, delay: 0.4 }}>
+                <img src={img(src)} alt="" className="bob w-full drop-shadow-[0_18px_18px_rgb(20_0_10/0.55)]" style={{ ['--bob' as string]: SLOTS[j].bob }} />
+              </motion.div>
+            ))}
             <AnimatePresence initial={false}>
-              {s.pieces.map((src, j) => (
+              {wide && s.pieces.map((src, j) => (
                 <motion.div key={s.id + j} aria-hidden className={`pointer-events-none absolute ${SLOTS[j].cls}`}
                   initial={reduce ? false : { opacity: 0, ...SLOTS[j].from, rotate: -20, scale: 0.7 }}
                   animate={{ opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 }}

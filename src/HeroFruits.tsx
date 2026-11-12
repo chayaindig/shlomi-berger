@@ -22,6 +22,7 @@ export const melonPool: HeroItem[] = [
   { id: 'rose', name: 'ורד גדול', src: 'hero/melons/rose.webp' },
   { id: 'jerusalem', name: 'ירושלים בגילוף', src: 'hero/melons/bni.webp' },
   { id: 'birthday', name: 'יום הולדת שמח', src: 'hero/melons/birthday.webp' },
+  { id: 'portrait', name: 'סבא, יום הולדת שמח', src: 'hero/melons/portrait.webp' },
 ];
 const RING = 5;
 const ORBIT = 0.78; // ring radius, as a share of half the stage
