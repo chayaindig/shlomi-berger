@@ -1,6 +1,7 @@
 import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from 'motion/react';
 import { useRef, useState } from 'react';
-import { business, categories, eventServices, extras, faq, img, money, products, testimonials, waLink, works, type Category } from './data';
+import { business, categories, eventServices, extras, faq, img, kashrut, money, products, testimonials, waLink, works, type Category } from './data';
+import { LEGAL_LINKS } from './Legal';
 import { HeroFruits, melonPool } from './HeroFruits';
 import { LuminousType } from './components/LuminousType';
 import { Button, Icon, Reveal, ScrollWords, Stroke } from './ui';
@@ -664,7 +665,11 @@ export function Footer({ cart }: { cart: CartApi }) {
             <a href={waLink('היי שלומי')} target="_blank" rel="noreferrer" aria-label="וואטסאפ" className="grid size-10 place-items-center rounded-full border border-cream/20 text-cream hover:border-gold hover:text-gold"><Icon name="whatsapp" /></a>
           </div>
         </div>
-        <p className="mt-8 text-note text-mist/60">© {new Date().getFullYear()} האמנות שבפרי · עיצוב ובנייה: חיה אינדיג</p>
+        <p className="mt-8 text-note text-mist">כשרות: {kashrut}</p>
+        <nav aria-label="מסמכי האתר" className="mt-4 flex flex-wrap justify-center gap-x-5 gap-y-2 text-note text-mist">
+          {LEGAL_LINKS.map(l => <a key={l.href} href={l.href} className="underline-offset-4 hover:text-gold hover:underline">{l.label}</a>)}
+        </nav>
+        <p className="mt-6 text-note text-mist/60">© {new Date().getFullYear()} האמנות שבפרי · עיצוב ובנייה: חיה אינדיג</p>
       </div>
     </footer>
   );

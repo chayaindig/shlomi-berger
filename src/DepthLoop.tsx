@@ -31,7 +31,7 @@ export function DepthLoop({ items, label }: { items: DepthItem[]; label: string 
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
     const rtl = getComputedStyle(stage).direction === 'rtl';
     const dir = rtl ? -1 : 1;
-    let W = 1, cw = 1, pos = 0, raf = 0, lastStep = performance.now(), visible = false, announced = -1;
+    let W = 1, cw = 1, pos = 0, raf = 0, lastStep = performance.now(), visible = false, announced = -1, hover = false, focused = false;
     let anim: { from: number; to: number; t0: number; dur: number; snap?: boolean } | null = null;
     let drag: { id: number; x: number; y: number; p0: number; lx: number; lt: number; v: number; moved: boolean } | null = null;
 
@@ -75,7 +75,7 @@ export function DepthLoop({ items, label }: { items: DepthItem[]; label: string 
         const p = clamp((now - anim.t0) / anim.dur, 0, 1);
         pos = anim.from + (anim.to - anim.from) * (anim.snap ? easeOut(p) : easeIO(p));
         if (p >= 1) { pos = anim.to; anim = null; lastStep = now; }
-      } else if (!drag && visible && !reduce.matches && INTERVAL > 0 && n > 1 && now - lastStep > INTERVAL * 1000 && !document.hidden) step(1);
+      } else if (!drag && visible && !hover && !focused && !reduce.matches && INTERVAL > 0 && n > 1 && now - lastStep > INTERVAL * 1000 && !document.hidden) step(1);
       draw();
     };
 
@@ -115,6 +115,11 @@ export function DepthLoop({ items, label }: { items: DepthItem[]; label: string 
       });
       if (hit >= 0) { let dd = hit - Math.round(pos); dd -= Math.round(dd / n) * n; if (dd) step(dd); }
     };
+    // hold still while the pointer is over the row or the keyboard is on it (WCAG 2.2.2)
+    on('pointerenter', (e: PointerEvent) => { if (e.pointerType === 'mouse') hover = true; });
+    on('pointerleave', () => { hover = false; lastStep = performance.now(); });
+    on('focusin', () => { focused = stage.matches(':focus-visible'); });
+    on('focusout', () => { focused = false; lastStep = performance.now(); });
     on('pointerup', end); on('pointercancel', end); on('dragstart', (e: Event) => e.preventDefault());
     on('keydown', (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') { e.preventDefault(); step(dir); }

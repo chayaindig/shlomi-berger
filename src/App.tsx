@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { deliveryStatus, israelDate, type CalendarEvent } from './delivery';
-import { availability, business, drinks, extras, img, money, pickupAddress, products, waLink, zones } from './data';
+import { availability, business, cancelPolicy, drinks, extras, img, kashrut, money, pickupAddress, products, waLink, zones } from './data';
 import { watchOrphans } from './noOrphans';
 import { watchPageColor } from './pageColor';
 import { About, Catalog, Events, Faq, Footer, FruitStory, Hero, HowToOrder, Testimonials, Ticker, Works } from './Sections';
@@ -458,6 +458,8 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
                 <button onClick={sendWa} className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-wine py-3.5 font-medium text-cream transition-colors hover:bg-plum">
                   <Icon name="whatsapp" /> לתיאום ההזמנה עם שלומי
                 </button>
+                <p className="mt-3 text-note text-ink-soft">{cancelPolicy} <a href="./shipping" className="underline underline-offset-2 hover:text-wine">לכל הפרטים</a></p>
+                <p className="mt-1 text-note text-ink-soft">כשרות: {kashrut}.</p>
               </div>
             )}
           </motion.aside>
