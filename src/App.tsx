@@ -19,7 +19,7 @@ const words = (t: string) => t.trim().split(/\s+/).filter(Boolean);
 const nav = [['המגשים', '#catalog'], ['איך מזמינים', '#how'], ['אירועים', '#events'], ['שאלות', '#faq']];
 // Version D (d.html): watermelon hero, trays right after it, Shlomi's works, then the pomegranate story.
 // The other sections wait for now.
-const navD = [['המגשים', '#catalog'], ['עבודות', '#wall'], ['הסיפור', '#story']];
+const navD = [['המגשים', '#catalog'], ['עבודות', '#wall'], ['הסיפור', '#story'], ['שאלות', '#faq']];
 
 export default function App({ layout = 'a' }: { layout?: 'a' | 'd' }) {
   const [cart, setCart] = useState<Record<string, number>>({});
@@ -51,6 +51,7 @@ export default function App({ layout = 'a' }: { layout?: 'a' | 'd' }) {
         <Catalog cart={api} concrete />
         <PlatterWall cart={api} worksOnly />
         <FruitStory />
+        <Faq />
       </main>
       ) : (
       <main>
