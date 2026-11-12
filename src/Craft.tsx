@@ -200,7 +200,7 @@ export function AppleBlessing({ cart }: { cart: CartApi }) {
 // The new-* photos sit on the same butcher-block table (background replaced in Magnific).
 const wallWorks = [
   { src: 'new-wedding', title: 'מגש לחתונה' },
-  { src: 'new-tower', title: 'מגש קומות עם שם מגולף' },
+  { src: 'new-tower', title: 'עוגת אבטיח' },
   { src: 'new-name-tray', title: 'מגש עם שם מגולף' },
   { src: 'real-bouquet', title: 'זר פירות על מגש', root: true },
   { src: 'new-pineapple', title: 'מגש חגיגי עם אננס' },
