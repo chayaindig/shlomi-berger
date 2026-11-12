@@ -10,11 +10,13 @@ import { AppleBlessing, AppleSimulator, Carving, PlatterWall } from './Craft';
 import { CursorTrail } from './CursorTrail';
 import { HeroMelons } from './HeroMelons';
 import { DatePicker, longDate } from './DatePicker';
+import { saveOrder, useLive } from './live';
 
 const allItems = [...products.map(p => ({ id: p.id, name: p.name, detail: p.size, price: p.price as number | null, from: p.from, tray: true, large: p.large })),
   ...extras.map(x => ({ id: x.id, name: x.name, detail: x.note, price: x.price, from: x.from, tray: false, large: false })),
   ...drinks.map(x => ({ id: x.id, name: x.name, detail: x.group, price: x.price as number | null, from: false, tray: false, large: false }))];
 const words = (t: string) => t.trim().split(/\s+/).filter(Boolean);
+const CLOSED_TODAY = 'ההזמנות להיום נסגרו. אפשר לבחור יום אחר, ולפרטים נוספים לפנות לשלומי בוואטסאפ.';
 
 const nav = [['המגשים', '#catalog'], ['איך מזמינים', '#how'], ['אירועים', '#events'], ['שאלות', '#faq']];
 // Version D (d.html): watermelon hero, trays right after it, Shlomi's works, then the pomegranate story.
@@ -71,6 +73,7 @@ export default function App({ layout = 'a' }: { layout?: 'a' | 'd' }) {
       </main>
       )}
       <Footer cart={api} />
+      <ClosedTodayNotice />
 
 
       {/* Order bar on mobile once something is in the order */}
@@ -132,6 +135,29 @@ function Header({ count, onCart, links }: { count: number; onCart: () => void; l
   );
 }
 
+/* Pops up when Shlomi closes orders for today from his panel (12.11.2026) */
+function ClosedTodayNotice() {
+  const live = useLive();
+  const [hidden, setHidden] = useState(() => { try { return sessionStorage.getItem('closed-today-seen') === israelDate(); } catch { return false; } });
+  const close = () => { setHidden(true); try { sessionStorage.setItem('closed-today-seen', israelDate()); } catch { /* private mode */ } };
+  return (
+    <AnimatePresence>
+      {live.closedToday && !hidden && (
+        <motion.div role="status" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 24 }} transition={{ delay: 1.2, duration: 0.4 }}
+          className="fixed inset-x-5 bottom-24 z-[45] mx-auto max-w-md rounded-3xl bg-cream p-5 text-ink shadow-[0_24px_50px_-14px_rgb(0_0_0/0.55)]">
+          <button type="button" onClick={close} aria-label="סגירה" className="absolute left-3 top-3 grid size-9 place-items-center rounded-full hover:bg-sand"><Icon name="close" className="size-4" /></button>
+          <p className="font-display text-sub font-bold">🍉 ההזמנות להיום נסגרו</p>
+          <p className="mt-1.5 text-ink-soft">אפשר להזמין כבר עכשיו לימים הבאים. לפרטים נוספים, שלומי זמין בוואטסאפ.</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <a href={waLink('היי שלומי, ראיתי שההזמנות להיום נסגרו, אשמח לפרטים')} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#25d366] px-5 py-2.5 font-medium text-white"><Icon name="whatsapp-logo" className="size-5" />לשלומי בוואטסאפ</a>
+            <button type="button" onClick={close} className="rounded-full border border-ink/20 px-5 py-2.5 font-medium hover:border-wine">הבנתי</button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 export function CartDrawer({ open, onClose, cart, setCart }: {
   open: boolean; onClose: () => void; cart: Record<string, number>; setCart: React.Dispatch<React.SetStateAction<Record<string, number>>>;
 }) {
@@ -148,6 +174,12 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
   const [calendar, setCalendar] = useState<CalendarEvent[] | null>(null);
   const [calendarError, setCalendarError] = useState(false);
   const [calendarRetry, setCalendarRetry] = useState(0);
+  // Shlomi's live switches from the admin panel, refreshed each time the cart opens
+  const live = useLive(open);
+  const blocked = useMemo(() => [...availability.blockedDates, ...live.blocked], [live.blocked]);
+  const dayStatus = (date: string, when: Date, pu: boolean) => live.closedToday && date === israelDate(when)
+    ? { error: CLOSED_TODAY, slots: [] as string[], note: '' }
+    : deliveryStatus(date, calendar, blocked, when, pu);
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     if (!open) return;
@@ -177,7 +209,7 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
   const zone = zones.find(z => z.id === d.zone);
   const pickup = d.zone === 'pickup';
   const hospital = !!zone?.hospital;
-  const delivery = deliveryStatus(d.date, calendar, availability.blockedDates, now, pickup);
+  const delivery = dayStatus(d.date, now, pickup);
   const slot = pickup ? delivery.slots[0] ?? '' : delivery.slots.includes(d.slot) ? d.slot : '';
   const hasLarge = lines.some(l => l.large);
   const subtotal = lines.reduce((s, l) => s + (l.price ?? 0) * l.qty, 0);
@@ -199,10 +231,12 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
 
   const validate = () => {
     if (!lines.some(l => l.tray)) return 'בחרו לפחות מגש אחד.';
+    const gone = lines.find(l => live.soldOut.has(l.id));
+    if (gone) return `${gone.name} אזל כרגע. הסירו אותו מההזמנה, או כתבו לשלומי בוואטסאפ.`;
     if (subtotal < availability.minOrder) return `ההזמנה המינימלית היא ${money(availability.minOrder)}.`;
     if (cart['x-bouquet'] && !hasLarge) return 'זר פירות אפשר להוסיף רק למגש בקוטר 40 ס״מ ומעלה.';
     if (zone && zoneLocked(zone)) return `משלוח לכל חלקי הארץ אפשרי בהזמנה מעל ${money(zone.minSubtotal!)}.`;
-    const current = deliveryStatus(d.date, calendar, availability.blockedDates, new Date(), pickup);
+    const current = dayStatus(d.date, new Date(), pickup);
     if (current.error) return current.error;
     if (d.date > maxDate) return 'אפשר להזמין עד סוף החודש הבא.';
     if (d.date && d.zone && !pickup && !current.slots.includes(d.slot)) return 'בחרו טווח שעות לאספקה.';
@@ -235,7 +269,10 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
     pickup ? 'איסוף עצמי: בלי עלות' : `משלוח: ${zone?.price == null ? 'בתיאום' : money(zone.price)}`,
     `סה״כ: ${money(total)}${hasCustom ? ' + פריטים בתיאום' : ''}`,
   ].filter(x => typeof x === 'string').join('\n');
-  const sendWa = () => { const e = validate(); setError(e || (business.whatsapp === '972500000000' ? 'מספר הוואטסאפ של שלומי טרם הוגדר. ההזמנה לא נשלחה.' : '')); if (!e && business.whatsapp !== '972500000000') window.open(waLink(message()), '_blank', 'noopener,noreferrer'); };
+  const sendWa = () => { const e = validate(); setError(e || (business.whatsapp === '972500000000' ? 'מספר הוואטסאפ של שלומי טרם הוגדר. ההזמנה לא נשלחה.' : '')); if (!e && business.whatsapp !== '972500000000') {
+    saveOrder({ name: d.name, phone: d.phone, date: d.date, slot, zone: pickup ? 'איסוף עצמי' : zone?.label ?? '', total, items: lines.map(l => ({ name: l.name, qty: l.qty, price: l.price })), message: message() });
+    window.open(waLink(message()), '_blank', 'noopener,noreferrer');
+  } };
   const previewOrder = () => { const e = validate(); setError(e); setReview(!e); };
   const field = 'w-full rounded-xl border border-ink/15 bg-white/70 px-3.5 py-2.5 text-ink focus:border-wine focus:outline-none';
 
@@ -286,12 +323,13 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
                     <p className="text-note text-ink-soft">תפוח או אבטיח עם ברכה, זר פירות, שייקים, פרלינים, יין או ליקר.</p>
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       {extras.slice(0, 4).map(x => {
-                        const locked = x.largeOnly && !hasLarge && !cart[x.id];
+                        const out = live.soldOut.has(x.id) && !cart[x.id];
+                        const locked = (x.largeOnly && !hasLarge && !cart[x.id]) || out;
                         return (
                           <button key={x.id} onClick={() => change(x.id, cart[x.id] ? -cart[x.id] : 1)} aria-pressed={!!cart[x.id]} disabled={locked}
                             className={`rounded-2xl border px-3 py-2.5 text-right transition-colors disabled:cursor-not-allowed disabled:opacity-55 ${cart[x.id] ? 'border-wine bg-wine text-cream' : 'border-ink/15 enabled:hover:border-wine'}`}>
                             <span className="flex items-center gap-1 font-medium leading-tight"><Icon name={cart[x.id] ? 'check' : 'plus'} className="size-4" />{x.name}</span>
-                            <span className={`block text-note ${cart[x.id] ? 'text-cream/80' : 'text-ink-soft'}`}>{x.price === null ? 'מחיר בתיאום' : (x.from ? 'החל מ-' : '') + money(x.price)}</span>
+                            <span className={`block text-note ${cart[x.id] ? 'text-cream/80' : 'text-ink-soft'}`}>{out ? 'אזל כרגע' : x.price === null ? 'מחיר בתיאום' : (x.from ? 'החל מ-' : '') + money(x.price)}</span>
                             {x.largeOnly && <span className={`block text-[0.75rem] leading-snug ${cart[x.id] ? 'text-cream/80' : 'text-ink-soft'}`}>{x.note}</span>}
                           </button>
                         );
@@ -332,8 +370,8 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
                     </AnimatePresence>
                     <div className="no-scrollbar -mx-6 mt-2 flex gap-2 overflow-x-auto px-6">
                       {extras.slice(4).filter(x => !cart[x.id]).map(x => (
-                        <button key={x.id} onClick={() => change(x.id, 1)} className="whitespace-nowrap rounded-full border border-ink/15 px-3.5 py-2 text-note hover:border-wine">
-                          <span className="flex items-center gap-1"><Icon name="plus" className="size-4" />{x.name}<span className="text-ink-soft">· {x.price === null ? 'בתיאום' : money(x.price)}</span></span>
+                        <button key={x.id} onClick={() => change(x.id, 1)} disabled={live.soldOut.has(x.id)} className="whitespace-nowrap rounded-full border border-ink/15 px-3.5 py-2 text-note enabled:hover:border-wine disabled:cursor-not-allowed disabled:opacity-50">
+                          <span className="flex items-center gap-1"><Icon name="plus" className="size-4" />{x.name}<span className="text-ink-soft">· {live.soldOut.has(x.id) ? 'אזל כרגע' : x.price === null ? 'בתיאום' : money(x.price)}</span></span>
                         </button>
                       ))}
                     </div>
@@ -344,7 +382,7 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
                         <option value="">בחרו בקבוק מהרשימה</option>
                         {(['יין', 'ליקר'] as const).map(g => (
                           <optgroup key={g} label={g === 'יין' ? 'יינות' : 'ליקרים'}>
-                            {drinks.filter(x => x.group === g).map(x => <option key={x.id} value={x.id}>{x.name} · {money(x.price)}</option>)}
+                            {drinks.filter(x => x.group === g).map(x => <option key={x.id} value={x.id} disabled={live.soldOut.has(x.id)}>{x.name} · {live.soldOut.has(x.id) ? 'אזל כרגע' : money(x.price)}</option>)}
                           </optgroup>
                         ))}
                       </select>
@@ -402,7 +440,7 @@ export function CartDrawer({ open, onClose, cart, setCart }: {
                     )}
 
                     {hospital && <p className="col-span-2 rounded-xl bg-sand px-3 py-2 text-note">משלוח לבית החולים: את המחלקה, הקומה ומספר החדר כותבים למטה, בשדה ההערות.</p>}
-                    <div className="col-span-2 mt-3"><span className="mb-1 block font-medium">באיזה יום לשמח אותם?</span><DatePicker value={d.date} onChange={date => setD(v => ({ ...v, date }))} today={today} maxDate={maxDate} disabled={!d.zone} loading={!calendar && !calendarError} closedReason={date => deliveryStatus(date, calendar, availability.blockedDates, now, pickup).error} className={`${field} disabled:opacity-40`} /><span className="mt-1 block text-note text-ink-soft">{!d.zone ? 'בחרו קודם אזור או איסוף עצמי.' : 'עד 16:00 אפשר להזמין להיום, בכפוף לזמינות.'}</span></div>
+                    <div className="col-span-2 mt-3"><span className="mb-1 block font-medium">באיזה יום לשמח אותם?</span><DatePicker value={d.date} onChange={date => setD(v => ({ ...v, date }))} today={today} maxDate={maxDate} disabled={!d.zone} loading={!calendar && !calendarError} closedReason={date => dayStatus(date, now, pickup).error} className={`${field} disabled:opacity-40`} /><span className="mt-1 block text-note text-ink-soft">{!d.zone ? 'בחרו קודם אזור או איסוף עצמי.' : 'עד 16:00 אפשר להזמין להיום, בכפוף לזמינות.'}</span></div>
                     <div className="col-span-2 rounded-2xl bg-sand p-4 text-note" aria-live="polite">
                       {calendarError ? <><p>לוח החגים לא נטען. לא ניתן לאשר מועד עד שהבדיקה תושלם.</p><button className="mt-2 underline" onClick={() => setCalendarRetry(v => v + 1)}>לנסות שוב</button></> : d.date ? (delivery.error ? <p className="text-gold-deep">{delivery.error}</p> : pickup ? <p className="font-medium">{slot}, {pickupAddress}</p> : <p className="font-medium">בחרו טווח שעות לאספקה:</p>) : <p>להזמנה לאותו יום מזמינים עד 16:00. משלוחים בטווחים של שלוש שעות, בין 08:00 ל־20:00.</p>}
                       {d.date && !delivery.error && !pickup && (
