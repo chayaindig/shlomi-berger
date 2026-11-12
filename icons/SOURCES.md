@@ -11,3 +11,5 @@
 | plus.svg, minus.svg | generated in Magnific in the same ink style, no matching item in the set |
 
 Colours were removed so each icon takes `currentColor` through the mask in `src/ui.tsx`.
+| whatsapp-logo.svg | Whatsapp 152740 (floating button, 12.11) |
+| accessibility.svg | Accessibility 15383287, outer circle removed (12.11) |
