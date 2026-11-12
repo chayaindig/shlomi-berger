@@ -2,7 +2,7 @@
 {
   "name": "shlomifruit",
   "compatibility_date": "2026-11-01",
-  "assets": { "directory": "./dist-cf", "not_found_handling": "single-page-application" },
+  "assets": { "directory": "./dist-cf", "not_found_handling": "404-page" },
   "workers_dev": false,
   "routes": [
     { "pattern": "shlomifruit.com", "custom_domain": true },

@@ -5,7 +5,8 @@ import { renameSync, rmSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const out = 'dist-cf';
-execSync(`npx vite build --outDir ${out} --emptyOutDir`, { stdio: 'inherit' });
+// base '/' (not './') so the 404 page loads its files from any missing path
+execSync(`npx vite build --base / --outDir ${out} --emptyOutDir`, { stdio: 'inherit' });
 renameSync(join(out, 'd.html'), join(out, 'index.html'));
 for (const f of ['melon.html', 'combo.html']) rmSync(join(out, f), { force: true });
 // Asset credits are for us, not for the public site

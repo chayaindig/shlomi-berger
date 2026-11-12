@@ -71,16 +71,6 @@ export default function App({ layout = 'a' }: { layout?: 'a' | 'd' }) {
       )}
       <Footer cart={api} />
 
-      {/* Floating WhatsApp, bottom right */}
-      <a
-        href={waLink('היי שלומי, אשמח לשמוע על מגשי הפירות')}
-        target="_blank"
-        rel="noreferrer"
-        aria-label="וואטסאפ לשלומי"
-        className="fixed bottom-5 right-5 z-40 grid size-14 place-items-center rounded-full bg-[#25d366] text-white shadow-[0_12px_30px_-8px_rgb(0_0_0/0.5)] transition-transform hover:scale-105"
-      >
-        <Icon name="whatsapp" className="size-7" />
-      </a>
 
       {/* Order bar on mobile once something is in the order */}
       <AnimatePresence>
@@ -88,7 +78,7 @@ export default function App({ layout = 'a' }: { layout?: 'a' | 'd' }) {
           <motion.button
             initial={{ y: 90 }} animate={{ y: 0 }} exit={{ y: 90 }}
             onClick={() => setOpen(true)}
-            className="fixed bottom-5 left-5 right-24 z-40 flex items-center justify-between rounded-full bg-gold px-5 py-3.5 font-medium text-night shadow-xl md:left-auto md:right-24 md:w-80"
+            className="fixed bottom-5 left-24 right-24 z-40 flex items-center justify-between gap-2 rounded-full bg-gold px-4 py-3.5 text-note font-medium text-night shadow-xl md:left-auto md:right-5 md:w-80 md:px-5 md:text-body"
           >
             <span>{count === 1 ? 'פריט אחד בהזמנה' : `${count} פריטים בהזמנה`}</span>
             <span className="flex items-center gap-1.5">להמשך <Icon name="arrow" className="size-5" /></span>

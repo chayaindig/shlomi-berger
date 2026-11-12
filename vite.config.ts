@@ -8,5 +8,5 @@ export default defineConfig({
   base: './',
   plugins: [react(), tailwindcss()],
   server: { port: 5195 },
-  build: { rollupOptions: { input: { main: 'index.html', melon: 'melon.html', combo: 'combo.html', d: 'd.html', terms: 'terms.html', shipping: 'shipping.html', privacy: 'privacy.html', accessibility: 'accessibility.html' } } },
+  build: { rollupOptions: { input: { main: 'index.html', melon: 'melon.html', combo: 'combo.html', d: 'd.html', terms: 'terms.html', shipping: 'shipping.html', privacy: 'privacy.html', accessibility: 'accessibility.html', thanks: 'thanks.html', notfound: '404.html' } } },
 });

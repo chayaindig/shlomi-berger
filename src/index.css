@@ -188,3 +188,12 @@ details > summary::-webkit-details-marker { display: none; }
 .dtl-sep { flex: none; width: 1px; height: .9em; background: rgb(255 255 255 / .82); transform: skewX(-18deg); opacity: .9; }
 .dtl-name, .dtl-meta { overflow: hidden; text-overflow: ellipsis; }
 .dtl-meta { font-size: calc(var(--dtl-meta-scale) * 1em); color: rgb(255 255 255 / .82); }
+
+/* Accessibility menu (12.11). Filters go on the page blocks, not on <html>, so fixed buttons keep working. */
+.a11y-contrast { --a11y-c: contrast(1.35); }
+.a11y-gray { --a11y-g: grayscale(1); }
+:is(.a11y-contrast, .a11y-gray) :is(#root > main, #root > div > main, header, footer, .order-panel, .a11y-fab) { filter: var(--a11y-c,) var(--a11y-g,); }
+.a11y-contrast .text-ink-soft, .a11y-contrast .text-mist { color: inherit; }
+.a11y-links a { text-decoration: underline !important; text-underline-offset: 3px; outline: 2px dashed var(--color-gold); outline-offset: 2px; }
+.a11y-still *, .a11y-still *::before, .a11y-still *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+.a11y-readable body, .a11y-readable body * { font-family: Arial, "Assistant", system-ui, sans-serif !important; letter-spacing: normal !important; }

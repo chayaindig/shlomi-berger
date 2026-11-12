@@ -28,7 +28,9 @@ export function DepthLoop({ items, label }: { items: DepthItem[]; label: string 
     const stage = stageRef.current!;
     const tiles = tilesRef.current.slice(0, items.length) as HTMLDivElement[];
     const n = items.length;
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const os = window.matchMedia('(prefers-reduced-motion: reduce)');
+    // OS setting or the site's accessibility menu ("עצירת אנימציות")
+    const reduce = { get matches() { return os.matches || document.documentElement.classList.contains('a11y-still'); } };
     const rtl = getComputedStyle(stage).direction === 'rtl';
     const dir = rtl ? -1 : 1;
     let W = 1, cw = 1, pos = 0, raf = 0, lastStep = performance.now(), visible = false, announced = -1, hover = false, focused = false;
