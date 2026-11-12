@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { business, cancelPolicy, img, waLink } from './data';
 import { watchOrphans } from './noOrphans';
 
@@ -32,16 +32,67 @@ function Stage({ title, children, pieces }: { title: string; children: ReactNode
   );
 }
 
+
+/* Pomegranate that bursts its arils like confetti, once, when the thank-you page opens.
+   DOM images on the Web Animations API (no canvas), skipped for reduced motion. */
+function PomegranateBurst() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const box = ref.current;
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('a11y-still');
+    if (!box || still) return;
+    const span = Math.min(innerWidth, 1100);
+    const made: HTMLImageElement[] = [];
+    // confetti physics: a fast pop out, air drag slows it, then a slow fluttering fall
+    const k = 2.6, fall = innerHeight * 0.16;
+    const shoot = (count: number, at: number, power: number) => {
+      for (let i = 0; i < count; i++) {
+        const el = document.createElement('img');
+        const size = 14 + Math.random() * 22;
+        el.src = asset(`fruit/aril-${(i % 5) + 1}.webp`);
+        el.alt = '';
+        el.setAttribute('aria-hidden', 'true');
+        // born somewhere on the open half's seeds (left side of the photo), not the crown
+        const ox = 34 + (Math.random() - 0.5) * 30, oy = 54 + (Math.random() - 0.5) * 40;
+        Object.assign(el.style, { position: 'absolute', left: `${ox}%`, top: `${oy}%`, width: `${size}px`, margin: `${-size / 2}px 0 0 ${-size / 2}px`, pointerEvents: 'none', opacity: '0', zIndex: '20' });
+        box.append(el);
+        made.push(el);
+        // every direction, a little more upward
+        const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 2 * 0.95;
+        const v = span * power * (0.9 + Math.random() * 1.6) * (Math.sin(angle) < 0 ? 1 : 0.6);
+        const vx = Math.cos(angle) * v, vy = Math.sin(angle) * v;
+        const spin = (Math.random() - 0.5) * 1400, wob = 10 + Math.random() * 24, T = 3.2 + Math.random() * 1.6;
+        const frames = Array.from({ length: 25 }, (_, n) => {
+          const t = (n / 24) * T, d = (1 - Math.exp(-k * t)) / k;
+          const x = vx * d + Math.sin(t * 5 + i) * wob * Math.min(t, 1);
+          const y = vy * d + fall * Math.max(0, t - d);
+          return { transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${(spin * d).toFixed(0)}deg) scale(${n === 0 ? 0.3 : 1})`, opacity: n === 0 ? 0 : n < 18 ? 1 : 1 - (n - 17) / 7 };
+        });
+        el.animate(frames, { duration: T * 1000, delay: at + Math.random() * 90, easing: 'linear', fill: 'forwards' });
+      }
+    };
+    const phone = innerWidth < 768;
+    shoot(phone ? 70 : 120, 420, 1.15);
+    shoot(phone ? 30 : 50, 1150, 0.7);
+    return () => made.forEach(el => el.remove());
+  }, []);
+  return (
+    <div ref={ref} className="relative mx-auto w-[min(62vw,17rem)]">
+      <img src={asset('fruit/pomegranate-open.webp')} alt="" aria-hidden width={1100} height={748}
+        className="pom-pop relative z-10 w-full drop-shadow-[0_26px_22px_rgb(0_0_0/0.4)]" />
+    </div>
+  );
+}
+
 export function ThanksPage() {
   return (
     <Stage title="תודה על ההזמנה" pieces={[
       ['hero/strawberries.webp', 'right-[4%] top-[8%]'],
       ['fruit/mint.webp', 'left-[6%] top-[14%]'],
       ['hero/grapes.webp', 'left-[4%] bottom-[8%]'],
-      ['fruit/pomegranate-open.webp', 'right-[6%] bottom-[10%]'],
+      ['hero/pomegranate.webp', 'right-[6%] bottom-[10%]'],
     ]}>
-      <img src={asset('hero/melons/rose.webp')} alt="" aria-hidden width={884} height={900}
-        className="mx-auto w-[min(46vw,13rem)] drop-shadow-[0_26px_22px_rgb(0_0_0/0.4)]" />
+      <PomegranateBurst />
       <h1 className="mt-6 font-script text-section">
         <span className="gold-text">תודה רבה!</span>
       </h1>
