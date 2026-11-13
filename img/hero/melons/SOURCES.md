@@ -10,3 +10,4 @@
 - roses.webp: Shlomi's studio photo (Downloads/שלומי ברגר/להירו 4.png), cropped to 900px, 12.11.2026
 - 12.11.2026 (לילה): birthday.webp חזר לתמונה המקורית של שלומי (במקום תמונת הסטודיו), חתוך מהתמונה הגדולה c36d0d28 לפי המסכה המקורית, 498px.
 - portrait.webp: אבטיח הדיוקן "סבא, יום הולדת שמח" (5055e30d), הרקע הוסר ב-Magnific SAM. נוסף לבקשת חיה.
+- 13.11.2026: birthday.webp הוחלף בתמונת הסטודיו החדשה (Downloads/שלומי ברגר/להירו5.jpeg), הרקע הוסר ב-Magnific, 600px.
