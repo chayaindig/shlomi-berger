@@ -1,0 +1,1 @@
+- straw-half.webp: Magnific stock photo "Strawberry cut in half on a white isolated background" (premium, Chaya's license), background removed locally, 13.11.2026. FAQ open state.
