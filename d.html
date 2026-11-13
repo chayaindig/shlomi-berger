@@ -42,15 +42,18 @@
     </script>
     <link rel="preload" href="./fonts/PompeiNarrow_FS-Bold.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="./fonts/Polin-Regular.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- The first hero melon is the biggest thing on the first screen: fetch it before anything else -->
+    <link rel="preload" href="./img/hero/melons/rose.webp" as="image" fetchpriority="high" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400&display=swap" />
-    <script type="module" crossorigin src="./assets/d-D9pSUAnZ.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/index-2HX_M--v.js">
-    <link rel="modulepreload" crossorigin href="./assets/live-_vIrd9By.js">
-    <link rel="modulepreload" crossorigin href="./assets/Legal-CQUFmBnO.js">
-    <link rel="modulepreload" crossorigin href="./assets/App-85MRzs41.js">
-    <link rel="modulepreload" crossorigin href="./assets/Floating-CeU-3Fhq.js">
-    <link rel="stylesheet" crossorigin href="./assets/index-7sb0G8T6.css">
+    <!-- Heebo is only for the works labels further down, so it must not hold up the first paint -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400&display=swap" media="print" onload="this.media='all'" />
+    <script type="module" crossorigin src="./assets/d-BS8WuFz_.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/index-BJyg7uee.js">
+    <link rel="modulepreload" crossorigin href="./assets/live-BZYzvpWw.js">
+    <link rel="modulepreload" crossorigin href="./assets/Legal-C-0ZsGUF.js">
+    <link rel="modulepreload" crossorigin href="./assets/App-CdshZQ1L.js">
+    <link rel="modulepreload" crossorigin href="./assets/Floating-CYPsbbK3.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-B7TCyJCg.css">
   </head>
   <body>
     <div id="root"></div>
