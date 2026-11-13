@@ -234,7 +234,7 @@ const story: Story[] = [
   { id: 'rose', tint: '#861a4c', size: [884, 900], pieces: ['fruit/straw.webp', 'fruit/mint.webp', 'fruit/seeds.webp', 'hero/grapes.webp'] },
   { id: 'heart', tint: '#7d1446', size: [834, 900], pieces: ['hero/strawberries.webp', 'fruit/mint.webp', 'fruit/seeds.webp', 'hero/grapes.webp'] },
   { id: 'roses', tint: '#6b0f3b', size: [900, 628], pieces: ['hero/grapes.webp', 'fruit/straw.webp', 'fruit/seeds.webp', 'fruit/mint.webp'] },
-  { id: 'birthday', tint: '#731243', size: [498, 434], pieces: ['hero/strawberries.webp', 'fruit/seeds.webp', 'fruit/mint.webp', 'fruit/pomegranate-open.webp'] },
+  { id: 'birthday', tint: '#731243', size: [600, 588], pieces: ['hero/strawberries.webp', 'fruit/seeds.webp', 'fruit/mint.webp', 'fruit/pomegranate-open.webp'] },
   // Portrait carving (Chaya, 12.11): shown on phones too
   { id: 'portrait', tint: '#6b0f3b', size: [782, 661], pieces: ['hero/grapes.webp', 'fruit/straw.webp', 'fruit/seeds.webp', 'fruit/mint.webp'] },
 ];
